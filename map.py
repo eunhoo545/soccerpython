@@ -1,86 +1,7 @@
 import pygame
 
-FPS = 60
-MAX_WIDTH = 1800
-MAX_HEIGHT = 1000
-pygame.init()
-clock = pygame.time.Clock()
-screen = pygame.display.set_mode((MAX_WIDTH,MAX_HEIGHT))
 
-def main():
-    ball = Ball(15)
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    print("space")
-        
-        clock.tick(FPS)
-        screen.fill((48,131,43))
-        lines()
-        ball.draw()
-        Physics.simulate()
-        Player.simulate()
-        
-        post1()
-        post2()
-        
-        
-            
-        pygame.display.update()
-
-class Physics():
-    objects = []
-    def __init__(self,x,y,color,radius):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.radius = radius
-        self.speedx = 0
-        self.speedy = 0
-        Physics.objects.append(self)
-    def draw(self):
-        return pygame.draw.circle(screen, self.color, (self.x, self.y),self.radius)
-    def move(self,x,y):
-        self.x += x
-        self.y += y
-    def setspeed(self,x,y):
-        self.speedx = x
-        self.speedy = y
-    def addspeed(self,x,y):
-        self.speedx += x
-        self.speedy += y
-    def collisionCheck():
-        for p in Physics.objects:
-           for l in Physics.objects:
-                cX =  (abs(( p.x - l.x ))*(p.radius/(p.radius+l.radius)))
-                cY = (abs(( p.y - l.y ))*(p.radius/(p.radius+l.radius)))
-                if p == l:
-                    continue
-                distance = (( p.x - l.x )**2 + ( p.y - l.y )**2 )**0.5
-                if distance < p.radius+l.radius:
-                    if p.x < l.x:
-                        centerX = p.x + cX
-                    if p.x > l.x:
-                        centerX = p.x - cX
-                    if p.y > l.y:
-                        centerY = p.y - cY
-                    if p.y < l.y:
-                        centerY = p.y + cY
-                    print(time.time(), p.name, p.x,p.y, l.name, l.x,l.y, 'center', centerX , centerY)
-                    p.move((p.x-centerX)/FPS*4,(p.y-centerY)/FPS*4)
-                    l.move((l.x-centerX)/FPS*4,(l.y-centerY)/FPS*4)
-    def simulate():
-        for i in Physics.objects:
-            i.move(i.speedx,i.speedy)
-            i.addspeed(-(i.speedx*0.023),-(i.speedy*0.023))
-            i.draw()
-        Physics.collisionCheck()
-        
-def post1():
+def post1(): #골대1
     pygame.draw.rect(screen,(255,255,255),(15,360,100,7)) 
     pygame.draw.rect(screen,(255,255,255),(15,640,100,7)) 
     pygame.draw.rect(screen,(255,255,255),(15,360,7,280)) 
@@ -151,7 +72,7 @@ def post1():
     pygame.draw.rect(screen,(156,171,171),(100,625,12,3)) 
     pygame.draw.rect(screen,(156,171,171),(100,635,12,3)) 
     
-def post2():
+def post2(): #골대2
     pygame.draw.rect(screen,(255,255,255),(1685,360,100,7)) 
     pygame.draw.rect(screen,(255,255,255),(1685,640,100,7)) 
     pygame.draw.rect(screen,(255,255,255),(1780,360,7,287)) 
@@ -222,7 +143,7 @@ def post2():
     pygame.draw.rect(screen,(156,171,171),(1688,625,12,3)) 
     pygame.draw.rect(screen,(156,171,171),(1688,635,12,3)) 
 
-def lines():
+def lines(): #선
     pygame.draw.rect(screen,(47,164,47),(0,0,100,1000))
     pygame.draw.rect(screen,(47,164,47),(200,0,100,1000))
     pygame.draw.rect(screen,(47,164,47),(400,0,100,1000))
@@ -263,69 +184,3 @@ def lines():
     pygame.draw.circle(screen,(255,255,255),[280,500],10)
     pygame.draw.circle(screen,(255,255,255),[1520,500],10)
         
-
-class Player(Physics):
-    players = []
-    def __init__(self,x,y,color,radius,name):
-        super().__init__(x,y,color,radius)
-
-        self.name = name
-        self.destx = self.x
-        self.desty = self.y
-        self.runacc = 0.02
-        self.rundec = 0.1
-        Player.players.append(self)
-    def think(self):
-        self.run()
-    def run(self):
-        d = ((self.x - self.destx)**2 + (self.y - self.desty)**2)**0.5
-        if d == 0:
-            return
-        if d > self.radius:    
-            self.addspeed((self.destx - self.x)/d * self.runacc,((self.desty-self.y)/d*self.runacc))
-    def simulate():
-        for i in Player.players:
-            i.think()
-
-#class Ball(Physics):
-    #def __init__(self,x,y,color,radius):
-        #super().__init__(x,y,color,radius)
-
-
-class Goalkeeper(Physics):
-     def __init__(self,x,y,color,radius,name):
-        super().__init__(x,y,color,radius)
-        self.name = name
-
-
-class Ball():
-    def __init__(self,radius):
-        self.x = 905
-        self.y = 505
-        self.radius = radius
-    def draw(self):
-        pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
-    
-        
-
-    
-    
-# 현실의 비율을 플레이어한테 적용해서 20픽셀을 1미터로 정했다.
-player1 = Player(150,200,(0,0,255),20,'박지성')
-player2 = Player(100,250,(0,0,205),20,'호날두')
-player3 = Player(100,300,(0,0,155),20,'메시')
-player3.destx = 1700
-player3.desty = 535
-player2.destx = 900
-player2.desty = 500
-player1.destx = 1000
-player1.desty = 1000
-
-goalkeeper1 = Goalkeeper(1640,510,(0,255,0),25,'d')
-
-#ball = Physics(200,200,(0,0,0),5)
-#goalkeeper1 = Goalkeeper(300,200,(0,255,0),25,'d')
-
-
-if __name__ == '__main__':
-    main()

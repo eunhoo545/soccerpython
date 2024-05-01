@@ -1,6 +1,7 @@
 import pygame
-
-
+MAX_WIDTH = 1800
+MAX_HEIGHT = 1000
+screen = pygame.display.set_mode((MAX_WIDTH,MAX_HEIGHT))
 def post1(): #골대1
     pygame.draw.rect(screen,(255,255,255),(15,360,100,7)) 
     pygame.draw.rect(screen,(255,255,255),(15,640,100,7)) 

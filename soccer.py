@@ -15,9 +15,7 @@ pi = 180
 RED = (255,0,0)
 
 myFont = pygame.font.SysFont( "dubai", 21, True, False)
-print( pygame.font.get_fonts() )
-scorepic = pygame.image.load("C:\\Users\\MEGA\\Downloads\\123d.png")
-scorepic = pygame.transform.scale(scorepic,(270,135))
+
 
 
 
@@ -31,12 +29,21 @@ class Power():
 		self.power_growing = False
 		self.firstpower = 0
 #class Map():
-def throwin():
+def throwin(person,ball):
+	
 	print('throwin')
+	time.sleep(1)
+	person.x = ball.x
+	person.y = ball.y
 def goalkick():
 	print('goalkick')
+	time.sleep(1)
 def kickoff():
 	print('kickoff')
+	time.sleep(1)
+def cornerkick():
+	print('cornerkick')
+	time.sleep(1)
 
 def distance(x1, y1, x2, y2):       #거리계산
 	return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
@@ -135,16 +142,21 @@ def main():
 		  # 플레이어가 공에 가까이 갔는지 확인
 		
 
+
 		# 공이 플레이어를 따라가게
-		
+		for i in hometeam:
+			if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
+				i.ball_following = True
+				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
+			else:
+				i.ball_following = False
 		for i in awayteam:
 			if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
 				i.ball_following = True
 				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
 			else:
 				i.ball_following = False
-
-
+		
 
 
 		for event in pygame.event.get():
@@ -155,10 +167,10 @@ def main():
 				if event.key == pygame.K_SPACE:  #SPACE를 눌러서 파워게이지 증가
 					person.power.power_growing = True
 			if event.type == pygame.KEYUP:     #SPACE를 때면 슛
-				if event.key == pygame.K_SPACE and ball_following == True:
+				if event.key == pygame.K_SPACE and person.ball_following == True:
 					person.power.firstpower = (person.power.power/person.power.max_power)
 					person.power.power_growing = False
-					ball_following = False
+					person.ball_following = False
 					person.power.power = 0
 					ball_moving = True
 					ball.speed = 5
@@ -170,15 +182,19 @@ def main():
 		if ball_moving:
 			ball.x -= math.cos(ball_angle) * ball.speed *person.power.firstpower
 			ball.y -= math.sin(ball_angle) * ball.speed *person.power.firstpower
-			
+			print('ballmoving')
 			ball.speed *= 0.99  # 공의 속도를 점점 감소시킴
 			if ball.speed < 0.2:
 				person.power.firstpower = 0
 				ball_moving = False
-				ball_following = False
+				person.ball_following = False
 			
-	
 		for i in hometeam:
+				if i.ball_following:      #공이 선수한테 붙음
+
+					ball.x =i.x + math.cos(ball_angle) * 12 
+					ball.y = i.y + math.sin(ball_angle) * 12
+		for i in awayteam:
 			if i.ball_following:      #공이 선수한테 붙음
 
 				ball.x =i.x + math.cos(ball_angle) * 12 
@@ -190,13 +206,13 @@ def main():
 			ball_moving= False
 			ball_following = False
 			ball.speed = 0
-			throwin()
+			throwin(person,ball)
 		if ball.y >= 940 + ball.radius:
 			ball.y = 940+ ball.radius
 			ball_moving= False
 			ball_following = False
 			ball.speed = 0
-			throwin()
+			throwin(person,ball)
 
 		if ball.x <= 120 - ball.radius:
 			if ball.y <350 or ball.y > 650:
@@ -207,8 +223,14 @@ def main():
 				goalkick()
 			else:
 				print('골1')
+
 				awayscore += 1
+				
 				scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
+				time.sleep(1)
+				ball.x = 905
+				ball.y = 505
+				ball_moving = False
 				if ball.y <370:
 					ball.y = 370
 				if ball.y >630:
@@ -219,11 +241,16 @@ def main():
 				ball_moving= False
 				ball_following = False
 				ball.speed = 0
+				
 				goalkick()
 			else:
 				homescore += 1
 				print('골2')
 				scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
+				time.sleep(1)
+				ball.x = 905
+				ball.y = 505
+				ball_moving = False
 				if ball.y <370:
 					ball.y = 370
 				if ball.y >630:

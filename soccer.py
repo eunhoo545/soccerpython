@@ -16,11 +16,6 @@ RED = (255,0,0)
 
 myFont = pygame.font.SysFont( "dubai", 21, True, False)
 
-
-
-
-
-
 class Power():
 	def __init__(self, max_power):
 		self.power = 0
@@ -33,14 +28,14 @@ class Map():
 	game = True
 	goalkick = False
 	cornerkick = False
-def throwin(person,ball,y,map):
 
+	
+def throwin(person,ball,y,map):
 	time.sleep(1)
 	print('throwin')
 	map.throwin = True
 	ball.x = ball.x
-	ball.y = y- ball.radius
-	ball_moving= False
+	ball.y = y - ball.radius
 	person.ball_following = False
 	ball.speed = 0
 	person.x = ball.x
@@ -50,19 +45,23 @@ def goalkick(person,ball,x,map):
 	time.sleep(1)
 	print('goalkick')
 	map.goalkick = True
-	ball.x = ball.x + x
-	ball.y = ball.y
-	ball_moving= False
 	person.ball_following = False
 	ball.speed = 0
-	person.x = ball.x
-	person.y = ball.y +20
+	if(x):
+		ball.x = 280
+		ball.y = 500
+	else:
+		ball.x = 1520
+		ball.y = 500
 def kickoff():
 	print('kickoff')
 	time.sleep(1)
 def cornerkick():
 	print('cornerkick')
 	time.sleep(1)
+
+
+
 
 def distance(x1, y1, x2, y2):       #거리계산
 	return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
@@ -139,8 +138,7 @@ def main():
 			person.y = 0 + person.radius
 		if person.y >= 1000 - person.radius:
 			person.y = 1000-person.radius
-		
-		#print(person.x,person.y)
+	
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_a]:
 			person.x -= person.speed
@@ -174,12 +172,14 @@ def main():
 		# 공이 플레이어를 따라가게
 		for i in hometeam:
 			if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
+				print(i.x)
 				i.ball_following = True
 				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
 			else:
 				i.ball_following = False
 		for i in awayteam:
 			if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
+				print(i)
 				i.ball_following = True
 				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
 			else:
@@ -230,19 +230,17 @@ def main():
 
 
 		if ball.y <= 70 - ball.radius and not map.throwin: #스로인과 골킥 
-			
 			throwin(person,ball,50,map)
 		if ball.y >= 940 + ball.radius and not map.throwin:
-			
 			throwin(person,ball,960,map)
 
 		if ball.x <= 120 - ball.radius:
 			if ball.y <350 or ball.y > 650:
 				ball.x = 120-ball.radius
 				ball_moving= False
-				ball_following = False
+				person.ball_following = False
 				ball.speed = 0
-				goalkick()
+				goalkick(person,ball,True,map)
 			else:
 				print('골1')
 
@@ -261,10 +259,9 @@ def main():
 			if ball.y <375 or ball.y > 625:
 				ball.x = 1680+ball.radius
 				ball_moving= False
-				ball_following = False
+				person.ball_following = False
 				ball.speed = 0
-				
-				goalkick()
+				goalkick(person,ball,False,map)
 			else:
 				homescore += 1
 				print('골2')

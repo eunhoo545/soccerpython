@@ -4,7 +4,7 @@ import time
 import math
 from map import post1,post2,lines 
 from game import throwin,goalkick,kickoff,calculate_angle,distance
-
+ball_moving = False
 FPS = 60
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
@@ -28,16 +28,35 @@ class Power():
 		self.max_power = max_power
 		self.power_growing = False
 		self.firstpower = 0
-#class Map():
-def throwin(person,ball):
-	
+class Map():
+	throwin = False
+	game = True
+	goalkick = False
+	cornerkick = False
+def throwin(person,ball,y,map):
+
+	time.sleep(1)
 	print('throwin')
-	time.sleep(1)
+	map.throwin = True
+	ball.x = ball.x
+	ball.y = y- ball.radius
+	ball_moving= False
+	person.ball_following = False
+	ball.speed = 0
 	person.x = ball.x
-	person.y = ball.y
-def goalkick():
-	print('goalkick')
+	person.y = ball.y +20
+	
+def goalkick(person,ball,x,map):
 	time.sleep(1)
+	print('goalkick')
+	map.goalkick = True
+	ball.x = ball.x + x
+	ball.y = ball.y
+	ball_moving= False
+	person.ball_following = False
+	ball.speed = 0
+	person.x = ball.x
+	person.y = ball.y +20
 def kickoff():
 	print('kickoff')
 	time.sleep(1)
@@ -51,6 +70,7 @@ def calculate_angle(x1, y1, x2, y2):        #각도계산
 	return math.atan2(y2 - y1, x2 - x1)
 
 def main():
+	global ball_moving
 	ball_following = False
 	homescore = 0
 	awayscore = 0
@@ -106,12 +126,20 @@ def main():
 	person22 = Person(15,1624,498,'away',40)
 	awayteam.append(person22)
 	ball = Ball(12)
+	map = Map()
 	
-	ball_moving = False
 	ball_angle = calculate_angle(person.x, person.y, ball.x, ball.y)
 
 	while True:
-
+		if person.x <= 0 + person.radius:
+			person.x = 0 + person.radius
+		if person.x >= 1800 - person.radius:
+			person.x = 1800 - person.radius
+		if person.y <= 0 + person.radius:
+			person.y = 0 + person.radius
+		if person.y >= 1000 - person.radius:
+			person.y = 1000-person.radius
+		
 		#print(person.x,person.y)
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_a]:
@@ -201,18 +229,12 @@ def main():
 				ball.y = i.y + math.sin(ball_angle) * 12
 
 
-		if ball.y <= 70 - ball.radius: #스로인과 골킥 
-			ball.y = 70- ball.radius
-			ball_moving= False
-			ball_following = False
-			ball.speed = 0
-			throwin(person,ball)
-		if ball.y >= 940 + ball.radius:
-			ball.y = 940+ ball.radius
-			ball_moving= False
-			ball_following = False
-			ball.speed = 0
-			throwin(person,ball)
+		if ball.y <= 70 - ball.radius and not map.throwin: #스로인과 골킥 
+			
+			throwin(person,ball,50,map)
+		if ball.y >= 940 + ball.radius and not map.throwin:
+			
+			throwin(person,ball,960,map)
 
 		if ball.x <= 120 - ball.radius:
 			if ball.y <350 or ball.y > 650:

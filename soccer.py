@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 import math
-from map import post1,post2,lines 
+from map import lines
 from game import throwin,goalkick,kickoff,calculate_angle,distance
 ball_moving = False
 FPS = 60
@@ -14,8 +14,8 @@ clock = pygame.time.Clock()
 pi = 180
 RED = (255,0,0)
 
-myFont = pygame.font.SysFont( "dubai", 21, True, False)
-
+myFont = pygame.font.SysFont( "centurygothic", False, False)
+goalpost1 = pygame.image.load('goalpost1.png')
 
 
 
@@ -78,7 +78,7 @@ def main():
 	awayteam = []
 	ball_angle = 0
 	m_state = 0
-	scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
+	scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
 
 	
 	person = Person(15,936,502,'home',40)
@@ -242,13 +242,13 @@ def main():
 				ball_moving= False
 				ball_following = False
 				ball.speed = 0
-				goalkick()
+				goalkick(person,ball,map)
 			else:
 				print('골1')
 
 				awayscore += 1
 				
-				scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
+				scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
 				time.sleep(1)
 				ball.x = 905
 				ball.y = 505
@@ -264,7 +264,7 @@ def main():
 				ball_following = False
 				ball.speed = 0
 				
-				goalkick()
+				goalkick(person,ball,map)
 			else:
 				homescore += 1
 				print('골2')
@@ -309,14 +309,15 @@ def main():
 		person19.draw()
 		person20.draw()
 		person21.draw()
-		ball.draw()
+		ball.draw(person)
 		#Physics.simulate()
 		#Player.simulate()
 		pygame.draw.line(screen,(255,255,255),(0,5),(30,5),10)
-		post1()
-		post2()
+		#post1()
+		#post2()
 		#screen.blit(scorepic, [60, 25])
 		screen.blit(scoretext, [173, 56])
+		screen.blit(goalpost1, [1300,285])
 		pygame.display.update()
 
 
@@ -333,8 +334,10 @@ class Ball(): #공
 		self.y = 505
 		self.radius = radius
 		self.speed = 0
-	def draw(self):
-		pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
+	def draw(self,person):
+		dx = person.x - self.x
+		dy = person.y - self.y
+		pygame.draw.circle(screen,(0,0,0),(self.x+(2*dx),self.y+(2*dy)),self.radius)
 	
 class Person(): #선수
 

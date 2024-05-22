@@ -14,7 +14,7 @@ clock = pygame.time.Clock()
 pi = 180
 RED = (255,0,0)
 
-myFont = pygame.font.SysFont( "centurygothic", False, False)
+myFont = pygame.font.SysFont( "centurygothic",40, False, False)
 goalpost1 = pygame.image.load('goalpost1.png')
 
 
@@ -33,9 +33,11 @@ class Map():
 	game = True
 	goalkick = False
 	cornerkick = False
+	setpiece = False
 def throwin(person,ball,y,map):
 
 	time.sleep(1)
+	map.setpiece = True
 	print('throwin')
 	map.throwin = True
 	ball.x = ball.x
@@ -45,9 +47,12 @@ def throwin(person,ball,y,map):
 	ball.speed = 0
 	person.x = ball.x
 	person.y = ball.y +20
+
+
 	
 def goalkick(person,ball,x,map):
 	time.sleep(1)
+	map.setpiece = True
 	print('goalkick')
 	map.goalkick = True
 	ball.x = ball.x + x
@@ -59,10 +64,11 @@ def goalkick(person,ball,x,map):
 	person.y = ball.y +20
 def kickoff():
 	print('kickoff')
-	time.sleep(1)
 def cornerkick():
+	
 	print('cornerkick')
 	time.sleep(1)
+	map.setpiece = True
 
 def distance(x1, y1, x2, y2):       #거리계산
 	return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
@@ -142,15 +148,18 @@ def main():
 		
 		#print(person.x,person.y)
 		keys = pygame.key.get_pressed()
-		if keys[pygame.K_a]:
+		if keys[pygame.K_a] and map.setpiece == False:
 			person.x -= person.speed
-		if keys[pygame.K_d]:
+		if keys[pygame.K_d] and map.setpiece == False:
 			person.x += person.speed
-		if keys[pygame.K_w]:
+		if keys[pygame.K_w] and map.setpiece == False:
 			person.y -= person.speed
-		if keys[pygame.K_s]:
+		if keys[pygame.K_s] and map.setpiece == False:
 			person.y += person.speed        #플레이어 움직이기
-		if keys[pygame.K_SPACE]:
+		if keys[pygame.K_SPACE]and map.setpiece == False:
+			person.power.power_grow = 1
+			person.power.power +=1
+		if keys[pygame.K_SPACE]and map.setpiece == False:
 			person.power.power_grow = 1
 			person.power.power +=1
 		if keys[pygame.K_k]:
@@ -192,10 +201,10 @@ def main():
 				pygame.quit()
 				sys.exit()
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_SPACE:  #SPACE를 눌러서 파워게이지 증가
+				if event.key == pygame.K_SPACE and map.setpiece == False:  #SPACE를 눌러서 파워게이지 증가
 					person.power.power_growing = True
 			if event.type == pygame.KEYUP:     #SPACE를 때면 슛
-				if event.key == pygame.K_SPACE and person.ball_following == True:
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.setpiece == False:
 					person.power.firstpower = (person.power.power/person.power.max_power)
 					person.power.power_growing = False
 					person.ball_following = False
@@ -335,9 +344,13 @@ class Ball(): #공
 		self.radius = radius
 		self.speed = 0
 	def draw(self,person):
-		dx = person.x - self.x
-		dy = person.y - self.y
-		pygame.draw.circle(screen,(0,0,0),(self.x+(2*dx),self.y+(2*dy)),self.radius)
+		if person.ball_following == True:
+			dx = person.x - self.x
+			dy = person.y - self.y
+			pygame.draw.circle(screen,(0,0,0),(self.x+(2*dx),self.y+(2*dy)),self.radius)
+		else:
+			pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
+
 	
 class Person(): #선수
 

@@ -35,7 +35,6 @@ class Map():
 	cornerkick = False
 	setpiece = False
 def throwin(person,ball,y,map):
-
 	time.sleep(1)
 	map.setpiece = True
 	print('throwin')
@@ -48,20 +47,23 @@ def throwin(person,ball,y,map):
 	person.x = ball.x
 	person.y = ball.y +20
 
-
 	
-def goalkick(person,ball,x,map):
+def goalkick(person,ball,team,map):
 	time.sleep(1)
 	map.setpiece = True
 	print('goalkick')
 	map.goalkick = True
-	ball.x = ball.x + x
-	ball.y = ball.y
-	ball_moving= False
-	person.ball_following = False
-	ball.speed = 0
-	person.x = ball.x
-	person.y = ball.y +20
+	
+	if team == 'red':
+		ball.x = 200
+		ball.y = 370
+		person.x = 20
+		person.y = 370
+	#ball_moving= False
+	#person.ball_following = False
+	#ball.speed = 0
+	#person.x = ball.x
+	#person.y = ball.y +20
 def kickoff():
 	print('kickoff')
 def cornerkick():
@@ -87,49 +89,49 @@ def main():
 	scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
 
 	
-	person = Person(15,936,502,'home',40)
+	person = Person(15,936,502,'home',60)
 	hometeam.append(person)
-	person2 = Person(15,738,502,'home',40)
+	person2 = Person(15,738,502,'home',60)
 	hometeam.append(person2)
-	person3 = Person(15,690,684,'home',40)
+	person3 = Person(15,690,684,'home',60)
 	hometeam.append(person3)
-	person4 = Person(15,758,808,'home',40)
+	person4 = Person(15,758,808,'home',60)
 	hometeam.append(person4)
-	person5 = Person(15,724,158,'home',40)
+	person5 = Person(15,724,158,'home',60)
 	hometeam.append(person5)
-	person6 = Person(15,600,310,'home',40)
+	person6 = Person(15,600,310,'home',60)
 	hometeam.append(person6)
-	person7 = Person(15,402,108,'home',40)
+	person7 = Person(15,402,108,'home',60)
 	hometeam.append(person7)
-	person8 = Person(15,358,632,'home',40)
+	person8 = Person(15,358,632,'home',60)
 	hometeam.append(person8)
-	person9 = Person(15,318,388,'home',40)
+	person9 = Person(15,318,388,'home',60)
 	hometeam.append(person9)
-	person10 = Person(15,458,860,'home',40)
+	person10 = Person(15,458,860,'home',60)
 	hometeam.append(person10)
-	person11 = Person(15,166,506,'home',40)
+	person11 = Person(15,166,506,'home',60)
 	hometeam.append(person11)
-	person12 = Person(15,1030,396,'away',40)
+	person12 = Person(15,1030,396,'away',60)
 	awayteam.append(person12)
-	person13 = Person(15,1050,612,'away',40)
+	person13 = Person(15,1050,612,'away',60)
 	awayteam.append(person13)
-	person14 = Person(15,1042,828,'away',40)
+	person14 = Person(15,1042,828,'away',60)
 	awayteam.append(person14)
-	person15 = Person(15,1082,204,'away',40)
+	person15 = Person(15,1082,204,'away',60)
 	awayteam.append(person15)
-	person16 = Person(15,1240,458,'away',40)
+	person16 = Person(15,1240,458,'away',60)
 	awayteam.append(person16)
-	person17 = Person(15,1220,650,'away',40)
+	person17 = Person(15,1220,650,'away',60)
 	awayteam.append(person17)
-	person18 = Person(15,1362,864,'away',40)
+	person18 = Person(15,1362,864,'away',60)
 	awayteam.append(person18)
-	person19 = Person(15,1300,134,'away',40)
+	person19 = Person(15,1300,134,'away',60)
 	awayteam.append(person19)
-	person20 = Person(15,1406,368,'away',40)
+	person20 = Person(15,1406,368,'away',60)
 	awayteam.append(person20)
-	person21 = Person(15,1446,670,'away',40)
+	person21 = Person(15,1446,670,'away',60)
 	awayteam.append(person21)
-	person22 = Person(15,1624,498,'away',40)
+	person22 = Person(15,1624,498,'away',60)
 	awayteam.append(person22)
 	ball = Ball(12)
 	map = Map()
@@ -156,10 +158,10 @@ def main():
 			person.y -= person.speed
 		if keys[pygame.K_s] and map.setpiece == False:
 			person.y += person.speed        #플레이어 움직이기
-		if keys[pygame.K_SPACE]and map.setpiece == False:
+		if keys[pygame.K_SPACE]:
 			person.power.power_grow = 1
 			person.power.power +=1
-		if keys[pygame.K_SPACE]and map.setpiece == False:
+		if keys[pygame.K_SPACE]:
 			person.power.power_grow = 1
 			person.power.power +=1
 		if keys[pygame.K_k]:
@@ -168,14 +170,22 @@ def main():
 			person.power.power_grow = 0
 			person.power.power = 0
 		if keys[pygame.K_m] and m_state==0:
-					ball.x -= 100
-					m_state +=1
-
+			ball.x -= 100
+			m_state +=1
+		if keys[pygame.K_a] and map.throwin:
+			person.x -= 0.3
+		if keys[pygame.K_d] and map.throwin:
+			person.x += 0.3
+		if keys[pygame.K_w] and map.throwin:
+			person.y -= 0.3
+		if keys[pygame.K_s] and map.throwin:
+			person.y += 0.3   
 		if m_state != 0:
 			m_state +=1
 		if m_state == 180:
 			m_state = 0
-			
+		
+
 		  # 플레이어가 공에 가까이 갔는지 확인
 		
 
@@ -187,12 +197,18 @@ def main():
 				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
 			else:
 				i.ball_following = False
+			keys = pygame.key.get_pressed()
+			if keys[pygame.K_k]:
+				ball_angle += math.pi / 18
 		for i in awayteam:
 			if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
 				i.ball_following = True
 				ball_angle = calculate_angle(i.x, i.y, ball.x, ball.y)
 			else:
 				i.ball_following = False
+			keys = pygame.key.get_pressed()
+			if keys[pygame.K_k]:
+				ball_angle += math.pi / (math.inf * math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf* math.inf)
 		
 
 
@@ -201,16 +217,33 @@ def main():
 				pygame.quit()
 				sys.exit()
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_SPACE and map.setpiece == False:  #SPACE를 눌러서 파워게이지 증가
+				if event.key == pygame.K_SPACE:  #SPACE를 눌러서 파워게이지 증가
 					person.power.power_growing = True
-			if event.type == pygame.KEYUP:     #SPACE를 때면 슛
-				if event.key == pygame.K_SPACE and person.ball_following == True and map.setpiece == False:
+		
+			if event.type == pygame.KEYUP:     #SPACE를 떼면 슛
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == False:
 					person.power.firstpower = (person.power.power/person.power.max_power)
 					person.power.power_growing = False
 					person.ball_following = False
 					person.power.power = 0
 					ball_moving = True
 					ball.speed = 5
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == True:
+					person.power.firstpower = 0.5
+					person.power.power_growing = False
+					person.ball_following = False
+					person.power.power = 0
+					ball_moving = True
+					ball.speed = 5
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.goalkick == True:
+					person.power.firstpower = 35
+					person.power.power_growing = False
+					person.ball_following = False
+					person.power.power = 0
+					ball_moving = True
+					ball.speed = 5
+					
+					
 				
 			if person.power.power_growing and person.power.power < person.power.max_power:
 				person.power.power += 0.5
@@ -225,12 +258,14 @@ def main():
 				person.power.firstpower = 0
 				ball_moving = False
 				person.ball_following = False
-			
-		for i in hometeam:
-				if i.ball_following:      #공이 선수한테 붙음
+			if ball.speed < 3 or ball_moving == False:
+				map.throwin = False
+				map.setpiece = False
 
-					ball.x =i.x + math.cos(ball_angle) * 12 
-					ball.y = i.y + math.sin(ball_angle) * 12
+		for i in hometeam:
+			if i.ball_following:      #공이 선수한테 붙음					
+				ball.x =i.x + math.cos(ball_angle) * 12 
+				ball.y = i.y + math.sin(ball_angle) * 12
 		for i in awayteam:
 			if i.ball_following:      #공이 선수한테 붙음
 
@@ -238,20 +273,20 @@ def main():
 				ball.y = i.y + math.sin(ball_angle) * 12
 
 
-		if ball.y <= 70 - ball.radius and not map.throwin: #스로인과 골킥 
+		if ball.y <= 70 - ball.radius  and map.setpiece == False: #스로인과 골킥 
 			
 			throwin(person,ball,50,map)
-		if ball.y >= 940 + ball.radius and not map.throwin:
+		if ball.y >= 940 + ball.radius  and map.setpiece == False:
 			
 			throwin(person,ball,960,map)
 
-		if ball.x <= 120 - ball.radius:
+		if ball.x <= 120 - ball.radius and map.setpiece == False:
 			if ball.y <350 or ball.y > 650:
 				ball.x = 120-ball.radius
 				ball_moving= False
 				ball_following = False
 				ball.speed = 0
-				goalkick(person,ball,map)
+				goalkick(person,ball,'red',map)
 			else:
 				print('골1')
 
@@ -266,14 +301,14 @@ def main():
 					ball.y = 370
 				if ball.y >630:
 					ball.y = 630
-		if ball.x >= 1680 + ball.radius:
+		if ball.x >= 1680 + ball.radius and map.setpiece == False:
 			if ball.y <375 or ball.y > 625:
 				ball.x = 1680+ball.radius
 				ball_moving= False
 				ball_following = False
 				ball.speed = 0
 				
-				goalkick(person,ball,map)
+				goalkick(person,ball,'blue',map)
 			else:
 				homescore += 1
 				print('골2')

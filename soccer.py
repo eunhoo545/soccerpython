@@ -221,7 +221,7 @@ def main():
 					person.power.power_growing = True
 		
 			if event.type == pygame.KEYUP:     #SPACE를 떼면 슛
-				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == False:
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == False and map.goalkick == False:
 					person.power.firstpower = (person.power.power/person.power.max_power)
 					person.power.power_growing = False
 					person.ball_following = False
@@ -236,12 +236,12 @@ def main():
 					ball_moving = True
 					ball.speed = 5
 				if event.key == pygame.K_SPACE and person.ball_following == True and map.goalkick == True:
-					person.power.firstpower = 35
+					person.power.firstpower = 1
 					person.power.power_growing = False
 					person.ball_following = False
 					person.power.power = 0
 					ball_moving = True
-					ball.speed = 5
+					ball.speed = 15
 					
 					
 				
@@ -261,6 +261,7 @@ def main():
 			if ball.speed < 3 or ball_moving == False:
 				map.throwin = False
 				map.setpiece = False
+				map.goalkick = False
 
 		for i in hometeam:
 			if i.ball_following:      #공이 선수한테 붙음					

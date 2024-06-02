@@ -106,8 +106,8 @@ def calculate_angle(x1, y1, x2, y2):        #각도계산
 	return math.atan2(y2 - y1, x2 - x1)
 def calculate_reward(action, environment):
     if action == 'shoot' and goal_scored(environment.ball):
-        print("Goal scored! Reward: 10")
-        return 10  # 골을 넣었을 때의 보상
+        print("Goal scored! Reward: 20")
+        return 20  # 골을 넣었을 때의 보상
     elif action == 'shoot' and not goal_scored(environment.ball):
         print("Missed shot! Reward: -2")
         return -2  # 슛을 쐈으나 골을 놓쳤을 때의 페널티
@@ -237,6 +237,7 @@ def main():
 							target_player = random.choice(teammates)
 							person.pass1(ball, target_player)
 							print('pass complete')
+							
 			reward = calculate_reward(action, environment)
 			next_state = agent.get_state(environment)
 			agent.learn(state, action, reward, next_state)
@@ -305,6 +306,14 @@ def main():
 					person.power.power = 0
 					ball_moving = True
 					ball.speed = 5
+				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == True:
+					person.power.firstpower = 0.5
+					person.power.power_growing = False
+					person.ball_following = False
+					person.power.power = 0
+					ball_moving = True
+					ball.speed = 5
+					map.throwin = False
 				
 			if person.power.power_growing and person.power.power < person.power.max_power:
 				person.power.power += 0.5

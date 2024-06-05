@@ -9,6 +9,7 @@ from game import throwin,goalkick,kickoff,calculate_angle,distance
 import numpy as np
 import random
 ball_moving = False
+ball_angle = 0
 FPS = 60
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
@@ -18,7 +19,7 @@ clock = pygame.time.Clock()
 pi = 180
 RED = (255,0,0)
 
-myFont = pygame.font.SysFont( "centurygothic", False, False)
+myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 goalpost1 = pygame.image.load('goalpost1.png')
 
 
@@ -106,10 +107,10 @@ def calculate_angle(x1, y1, x2, y2):        #각도계산
 	return math.atan2(y2 - y1, x2 - x1)
 def calculate_reward(action, environment):
     if action == 'shoot' and goal_scored(environment.ball):
-        print("Goal scored! Reward: 20")
-        return 20  # 골을 넣었을 때의 보상
+        print("Goal scored! Reward: 10")
+        return 10  # 골을 넣었을 때의 보상
     elif action == 'shoot' and not goal_scored(environment.ball):
-        print("Missed shot! Reward: -2")
+        #print("Missed shot! Reward: -2")
         return -2  # 슛을 쐈으나 골을 놓쳤을 때의 페널티
     elif action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
         return 5  # 패스가 성공했을 때의 보상
@@ -196,15 +197,16 @@ def move_towards_ball(player, ball, speed):
 
 def main():
 	global ball_moving
+	global ball_angle
 	person = Person(15,936,502,'home',40)
-	agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'shoot'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
+	agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'shoot' , 'search'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
 	homescore = 0
 	awayscore = 0
 	hometeam = []
 	awayteam = []
 	hometeam, awayteam, ball = setup_teams_and_ball()
 	environment = Environment(hometeam, awayteam, ball)
-	ball_angle = 0
+	
 	m_state = 0
 	scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
 
@@ -237,7 +239,9 @@ def main():
 							target_player = random.choice(teammates)
 							person.pass1(ball, target_player)
 							print('pass complete')
-							
+				elif action == 'search':
+					print('search')
+					person.search()
 			reward = calculate_reward(action, environment)
 			next_state = agent.get_state(environment)
 			agent.learn(state, action, reward, next_state)
@@ -306,14 +310,6 @@ def main():
 					person.power.power = 0
 					ball_moving = True
 					ball.speed = 5
-				if event.key == pygame.K_SPACE and person.ball_following == True and map.throwin == True:
-					person.power.firstpower = 0.5
-					person.power.power_growing = False
-					person.ball_following = False
-					person.power.power = 0
-					ball_moving = True
-					ball.speed = 5
-					map.throwin = False
 				
 			if person.power.power_growing and person.power.power < person.power.max_power:
 				person.power.power += 0.5
@@ -456,12 +452,17 @@ class Person(): #선수
 				self.ball_following = False
 				print('Shoot towards goal at angle:', math.degrees(angle_to_goal))
 			else:
-				print('Angle벗어남')
-
+				print('Angle벗어남') 
+	def search(self):
+		global ball_angle
+		if self.ball_following:
+			ball_angle += pi/18
 
 	def pass1(self, ball, target_player):
 		if self.ball_following:
+
 			global ball_moving
+			self.search()
 			angle = calculate_angle(self.x, self.y, target_player.x, target_player.y)
 			angle_ball = calculate_angle(self.x, self.y, ball.x, ball.y)
 			angle_difference = abs(angle - angle_ball)

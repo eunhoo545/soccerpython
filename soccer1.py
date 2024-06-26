@@ -39,8 +39,10 @@ class Agent:
     def choose_action(self, state):
         # 엡실론-탐욕 정책
         if np.random.rand() < self.epsilon:
+            #print("90%")
             return np.random.choice(self.actions)
         else:
+            #print("10%")
             return max(self.q_table.get(state, {}), key=self.q_table.get(state, {}).get, default=np.random.choice(self.actions))
         
     def learn(self, state, action, reward, next_state):
@@ -83,7 +85,7 @@ class Map():
     cornerkick = False
 def throwin(person,ball,y,map):
     time.sleep(1)
-    print('throwin')
+    #print('throwin')
     map.throwin = True
     ball.x = ball.x
     ball.y = y- ball.radius
@@ -95,10 +97,10 @@ def throwin(person,ball,y,map):
     
 
 def kickoff():
-    print('kickoff')
+    #print('kickoff')
     time.sleep(1)
 def cornerkick():
-    print('cornerkick')
+    #print('cornerkick')
     time.sleep(1)
 def pass_completed(hometeam, awayteam):
     # 현재 공을 가진 선수를 찾음
@@ -143,11 +145,11 @@ def calculate_reward(action, environment):
          # 패스가 성공했을 때의 보상
     
         if current_holder in hometeam:
-            print('red')
+            #print('red')
             if distance(current_holder.x,current_holder.y,1750,450) < 900:
                 return 100
         if current_holder in awayteam:
-            print('blue')
+            #print('blue')
             if distance(current_holder.x,current_holder.y,50,450) < 900:
                 return 100
         return 50 
@@ -229,9 +231,8 @@ def main():
 
     ball = Ball(12)
     map = Map()
-
+    f = 0
     while True:
-        
         for person in hometeam + awayteam:
             state = agent.get_state(environment)
             action = agent.choose_action(state)
@@ -248,12 +249,12 @@ def main():
                     if person.ball_following == True:
                         teammates = [p for p in (hometeam if person in hometeam else awayteam) if p != person]
                         if teammates:
-                            print("pass!!!!")
+                            #print("pass!!!!")
                             target_player = random.choice(teammates)
                             person.pass1(ball, target_player)
-                            print('pass complete')
+                            #print('pass complete')
                 elif action == 'search':
-                    print('search')
+                    #print('search')
                     person.search()
             reward = calculate_reward(action, environment)
             next_state = agent.get_state(environment)
@@ -320,7 +321,9 @@ def main():
         screen.blit(scoretext, [173, 56])
         screen.blit(goalpost1, [1300,285])
         pygame.display.update()
-
+        if f == 0:
+            print(agent.q_table)
+            f = 1
 
 
 class Ball(): #공
@@ -369,7 +372,7 @@ class Person(): #선수
             angle = calculate_angle(self.x, self.y, target_player.x, target_player.y)
             angle_ball = calculate_angle(self.x, self.y, ball.x, ball.y)
             angle_difference = abs(angle - angle_ball)
-            print(angle, angle_ball, angle_difference)
+            #print(angle, angle_ball, angle_difference)
             if angle_difference < 0.1:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True

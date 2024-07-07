@@ -104,6 +104,6 @@ while running:
     pygame.draw.rect(screen, white, goal_rect)
     
     pygame.display.flip()
-    clock.tick(2)
+    clock.tick(2000)
 
 pygame.quit()

@@ -24,7 +24,9 @@ goalpost1 = pygame.image.load('goalpost1.png')
 
 
 class Agent:
+     
     def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.9):
+        
         self.q_table = {}
         self.actions = actions
         self.lr = learning_rate
@@ -44,7 +46,7 @@ class Agent:
         else:
             #print("10%")
             return max(self.q_table.get(state, {}), key=self.q_table.get(state, {}).get, default=np.random.choice(self.actions))
-        
+    
     def learn(self, state, action, reward, next_state):
         # Q-value 업데이트, Q-table 업데이트
         prev_value = self.q_table.get(state, {}).get(action, 0)
@@ -61,8 +63,8 @@ class Environment:
         # 모든 플레이어와 공의 위치를 반환
         positions = []
         for player in self.hometeam + self.awayteam:
-            positions.append((player.x, player.y))
-        positions.append((self.ball.x, self.ball.y))
+            positions.append(((player.x//10)*10, (player.y//10)*10))
+        positions.append(((self.ball.x//10)*10, (self.ball.y//10)*10))
         return positions
 
     def get_velocities(self):
@@ -138,7 +140,16 @@ def calculate_reward(action, environment):
     # if action == 'shoot' and not goal_scored(environment.ball):
     #     #print("Missed shot! Reward: -2")
     #     return -2  # 슛을 쐈으나 골을 놓쳤을 때의 페널티
-    
+    if action in ['move_left', 'move_right']:  # 왼쪽 또는 오른쪽으로 이동할 때
+        for players in hometeam + awayteam:
+            if current_holder in hometeam and players in hometeam and action == 'move_right':
+                return 100
+            elif current_holder in awayteam and players in awayteam and action == 'move_left':
+                return 100 
+            else:
+                return -90
+        
+
     
 
     if action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
@@ -233,9 +244,11 @@ def main():
     map = Map()
     f = 0
     while True:
+        
         for person in hometeam + awayteam:
             state = agent.get_state(environment)
             action = agent.choose_action(state)
+            print(action)
             if action == 'move_up':
                 person.moveup()
             elif action == 'move_down':
@@ -349,6 +362,7 @@ class Person(): #선수
         self.team = team
         self.power = Power(max_power)
         self.ball_following = False
+        
 
     def moveup(self):
         self.y -= self.speed

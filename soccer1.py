@@ -21,6 +21,7 @@ RED = (255,0,0)
 
 myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 goalpost1 = pygame.image.load('goalpost1.png')
+goalpost2 = pygame.image.load('goalpost1.png')
 
 
 class Agent:
@@ -49,9 +50,15 @@ class Agent:
     
     def learn(self, state, action, reward, next_state):
         # Q-value 업데이트, Q-table 업데이트
+        #예를들어서 3,4에 있다고 가정할 때
+        #그리고 입력state도 3,4 일 경우
+        #print(self.q_table)
+        
+        
         prev_value = self.q_table.get(state, {}).get(action, 0)
         future_value = max(self.q_table.get(next_state, {}).values(), default=0)
         self.q_table.setdefault(state, {})[action] = prev_value + self.lr * (reward + self.gamma * future_value - prev_value)
+        #print(self.q_table)
         
 class Environment:
     def __init__(self, hometeam, awayteam, ball):
@@ -63,8 +70,8 @@ class Environment:
         # 모든 플레이어와 공의 위치를 반환
         positions = []
         for player in self.hometeam + self.awayteam:
-            positions.append(((player.x//10)*10, (player.y//10)*10))
-        positions.append(((self.ball.x//10)*10, (self.ball.y//10)*10))
+            positions.append(((player.x//100)*100, (player.y//100)*100))
+        positions.append(((self.ball.x//100)*100, (self.ball.y//100)*100))
         return positions
 
     def get_velocities(self):
@@ -134,7 +141,6 @@ def calculate_reward(action, environment):
     teammates = [player for player in hometeam if current_holder in hometeam] + \
                 [player for player in awayteam if current_holder in awayteam]
     # if action == 'shoot' and goal_scored(environment.ball):
-    
     #     print("Goal scored! Reward: 10")
     #     return 10  # 골을 넣었을 때의 보상
     # if action == 'shoot' and not goal_scored(environment.ball):
@@ -142,10 +148,11 @@ def calculate_reward(action, environment):
     #     return -2  # 슛을 쐈으나 골을 놓쳤을 때의 페널티
     if action in ['move_left', 'move_right']:  # 왼쪽 또는 오른쪽으로 이동할 때
         for players in hometeam + awayteam:
-            if current_holder in hometeam and players in hometeam and action == 'move_right':
-                return 100
-            elif current_holder in awayteam and players in awayteam and action == 'move_left':
-                return 100 
+            if current_holder is not None:
+                if current_holder.team == 'home' and players in hometeam and action == 'move_right':
+                    return 100
+                elif current_holder.team == 'away'and players in awayteam and action == 'move_left':
+                    return 100 
             else:
                 return -90
         
@@ -244,11 +251,12 @@ def main():
     map = Map()
     f = 0
     while True:
-        
+
         for person in hometeam + awayteam:
             state = agent.get_state(environment)
+            #print(state)
             action = agent.choose_action(state)
-            print(action)
+            #print(action)
             if action == 'move_up':
                 person.moveup()
             elif action == 'move_down':
@@ -317,7 +325,7 @@ def main():
         for i in awayteam:
             if i.ball_following:      #공이 선수한테 붙음
                 ball.x = i.x + math.cos(ball_angle) * 12 
-                ball.y = i.y + math.sin(ball_angle) * 1       
+                ball.y = i.y + math.sin(ball_angle) * 12      
         
         
         clock.tick(FPS)
@@ -332,7 +340,11 @@ def main():
         ball.draw(person)
         pygame.draw.line(screen,(255,255,255),(0,5),(30,5),10)
         screen.blit(scoretext, [173, 56])
+        pygame.transform.flip(goalpost2, True, False)
+
+
         screen.blit(goalpost1, [1300,285])
+        screen.blit(goalpost2, [-373,285])
         pygame.display.update()
         if f == 0:
             print(agent.q_table)
@@ -341,7 +353,7 @@ def main():
 
 class Ball(): #공
     def __init__(self,radius):
-        self.x = 905
+        self.x = 1100
         self.y = 505
         self.radius = radius
         self.speed = 0

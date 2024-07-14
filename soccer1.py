@@ -52,7 +52,7 @@ class Agent:
         # Q-value 업데이트, Q-table 업데이트
         #예를들어서 3,4에 있다고 가정할 때
         #그리고 입력state도 3,4 일 경우
-        #print(self.q_table)
+        print(self.q_table)
         
         
         prev_value = self.q_table.get(state, {}).get(action, 0)
@@ -158,21 +158,20 @@ def calculate_reward(action, environment):
         
 
     
+    
 
     if action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
          # 패스가 성공했을 때의 보상
     
-        if current_holder in hometeam:
+        #if current_holder in hometeam:
             #print('red')
-            if distance(current_holder.x,current_holder.y,1750,450) < 900:
-                return 100
-        if current_holder in awayteam:
+            
+        #if current_holder in awayteam:
             #print('blue')
-            if distance(current_holder.x,current_holder.y,50,450) < 900:
-                return 100
-        return 50 
+            
+        return 10000 
     else:
-        return -1  #일단 나머지 동작에 대한 패널티
+        return -10  #일단 나머지 동작에 대한 패널티
     
 def setup_teams_and_ball():
     global hometeam
@@ -251,7 +250,14 @@ def main():
     map = Map()
     f = 0
     while True:
-
+        if ball.x < 50:
+            ball.x = 50
+        if ball.x > 1750:
+            ball.x = 1750
+        if ball.y < 20:
+            ball.y = 20
+        if ball.y > 980:
+            ball.y = 980
         for person in hometeam + awayteam:
             state = agent.get_state(environment)
             #print(state)
@@ -280,7 +286,14 @@ def main():
             reward = calculate_reward(action, environment)
             next_state = agent.get_state(environment)
             agent.learn(state, action, reward, next_state)
-
+            if person.x < 50:
+                person.x = 50
+            if person.x > 1750:
+                person.x = 1750
+            if person.y < 20:
+                person.y = 20
+            if person.y > 980:
+                person.y = 980
         if not any(player.ball_following for player in hometeam + awayteam):  
             # 모든 선수가 공을 따라가지 않을 때 가장 가까운 녀석 찾기
             closest_player = min(hometeam + awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))

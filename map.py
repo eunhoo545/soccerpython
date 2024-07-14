@@ -185,3 +185,5 @@ def lines(): #선
     pygame.draw.circle(screen,(255,255,255),[280,500],10)
     pygame.draw.circle(screen,(255,255,255),[1520,500],10)
   
+
+lines()

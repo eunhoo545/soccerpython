@@ -36,7 +36,7 @@ class Agent:
 
     def get_state(self, environment):
         # 위치와 속도를 상태로 변환
-        state = tuple(environment.get_positions() + environment.get_velocities())
+        state = tuple(environment.get_positions()) #+ environment.get_velocities())
         return state
 
     def choose_action(self, state):

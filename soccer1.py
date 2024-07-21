@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 import math
-
+import pyautogui
 
 from map import lines
 from game import throwin,goalkick,kickoff,calculate_angle,distance
@@ -10,6 +10,7 @@ import numpy as np
 import random
 ball_moving = False
 ball_angle = 0
+current_holder = None
 FPS = 60
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
@@ -79,7 +80,6 @@ class Environment:
         return [0] * (len(self.hometeam) + len(self.awayteam) + 1)  # 간단한 예제로 모두 0으로 설정
 
 
-current_holder = None
 #class Power():
 #    def __init__(self, max_power):
 #        self.power = 20
@@ -116,6 +116,7 @@ def pass_completed(hometeam, awayteam):
 
     global teammates
     global current_holder
+    #print("CURRENT HOLDER: ", current_holder)
     current_holder = next((player for player in hometeam + awayteam if player.ball_following), None)
     
     # 공을 가진 선수가 없으면 패스는 실패
@@ -129,6 +130,20 @@ def pass_completed(hometeam, awayteam):
     #for teammate in teammates:
       #  if teammate != current_holder and distance(current_holder.x, current_holder.y, teammate.x, teammate.y) < 30:
        #     return True
+        
+    return False
+def shoot_completed(hometeam, awayteam):
+    
+
+    global current_holder
+    #print("CURRENT HOLDER: ", current_holder)
+    current_holder = next((player for player in hometeam + awayteam if player.ball_following), None)
+    
+    
+    
+   
+    
+   
         
     return False
 def distance(x1, y1, x2, y2):#거리계산
@@ -164,7 +179,9 @@ def calculate_reward(action, environment):
                     return 150
     
     
-
+    if action == 'shoot' and shoot_completed(environment.hometeam, environment.awayteam):
+            
+        return 35000 
     if action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
          # 패스가 성공했을 때의 보상
     
@@ -174,9 +191,10 @@ def calculate_reward(action, environment):
         #if current_holder in awayteam:
             #print('blue')
             
-        return 10000 
+        return 5000 
     else:
         return -10  #일단 나머지 동작에 대한 패널티
+    
     
 #이후에 뻇는걸 추가
 def setup_teams_and_ball():
@@ -243,7 +261,7 @@ def main():
     global ball_moving
     global ball_angle
     #person = Person(15,936,502,'home',40)
-    agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search','intercept'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
+    agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search','intercept','shoot'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
     homescore = 0
     awayscore = 0
     hometeam = []
@@ -258,6 +276,7 @@ def main():
     map = Map()
     f = 0
     while True:
+        global current_holder
         if ball.x < 50:
             ball.x = 50
         if ball.x > 1750:
@@ -279,8 +298,6 @@ def main():
                 person.moveleft()
             elif action == 'move_right':
                 person.moveright()
-            elif action == 'intercept':
-                person.intercept(ball)
             if person.ball_following:
                 if action == 'pass':
                     if person.ball_following == True:
@@ -294,7 +311,38 @@ def main():
                     #print('search')
                     person.search()
                     # 액션 선택하는 부분 
-    
+                elif action == 'shoot':
+                    
+                    x1 = 0
+                    x2 = 0
+                    y1 = 0
+                    y2 = 0
+ 
+                    if current_holder is not None:    
+                        if current_holder.team == 'away':
+                            x1 = 18
+                            x2 = 111
+                            y1 = 354
+                            y2 = 657
+                        if current_holder.team =='home':
+                            x1 = 1691
+                            x2 = 1786
+                            y1= 354
+                            y2 = 657
+
+
+                        
+                        if abs(distance(current_holder.x,current_holder.y, (x1+x2)/2, (y1+y2)/2)) < 500:
+                            current_holder.shoot1(ball, x1,x2,y1,y2)
+                            print('shoot')
+                        #print('pass complete')
+            else:
+                if action == 'intercept':
+                    #print("intercept")
+                    person.intercept(ball)
+            reward = calculate_reward(action, environment)
+            next_state = agent.get_state(environment)
+            agent.learn(state, action, reward, next_state)
                        
 
               
@@ -410,7 +458,7 @@ class Person(): #선수
         global ball_angle
         if self.ball_following:
             ball_angle += pi/1800
-
+        
 
     def pass1(self, ball, target_player):
         if self.ball_following:
@@ -427,7 +475,21 @@ class Person(): #선수
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False
-
+    def shoot1(self, ball, x1, x2, y1, y2):
+        print(x1,x2,y1,y2)
+        if self.ball_following:
+            global ball_moving
+            angle = calculate_angle(self.x, self.y, (x1+x2)/2, (y1+y2)/2)
+            angle_ball = calculate_angle(self.x, self.y, ball.x, ball.y)
+            angle_difference = abs(angle - angle_ball)
+            #print(angle, angle_ball, angle_difference)
+            if angle_difference < 0.2:  # 0.1 라디안 이내의 차이를 허용
+                self.ball_following = False
+                ball_moving = True
+                ball.speed = 7
+            #self.power.firstpower = 0
+            #self.power.power = 0
+            #self.power.power_growing = False
 
     def calculate_angle(x1, y1, x2, y2): 
         return math.atan2(y2 - y1, x2 - x1)
@@ -439,8 +501,12 @@ class Person(): #선수
             self.color = (0,0,255)
         pygame.draw.circle(screen,self.color,(self.x,self.y),self.radius)
     def intercept(self, ball):
+        #print(self.team)
         global current_holder
-        if (znot self.ball_following) and (current_holder is not None) and (self.team != current_holder.team):
-            move_towards_ball(self, ball, self.speed) 
+        if current_holder is not None:
+            #print(current_holder.team)
+            if (not self.ball_following)  and (current_holder is not None) and (self.team != current_holder.team):
+                #print("move")
+                move_towards_ball(self, ball, self.speed) 
 if __name__ == '__main__':
     main()

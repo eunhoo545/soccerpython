@@ -2,7 +2,6 @@ import pygame
 import sys
 import time
 import math
-import pyautogui
 
 from map import lines
 from game import throwin,goalkick,kickoff,calculate_angle,distance
@@ -164,9 +163,9 @@ def calculate_reward(action, environment):
     if action in ['move_left', 'move_right']:  # 왼쪽 또는 오른쪽으로 이동할 때
         for players in hometeam + awayteam:
             if current_holder is not None:
-                if current_holder.team == 'home' and players in hometeam and action == 'move_right':
+                if current_holder.team == 'home' and players.team == 'home' and action == 'move_right':
                     return 100
-                elif current_holder.team == 'away'and players in awayteam and action == 'move_left':
+                elif current_holder.team == 'away' and players.team == 'away' and action == 'move_left':
                     return 100 
             else:
                 return -90
@@ -285,7 +284,16 @@ def main():
             ball.y = 20
         if ball.y > 980:
             ball.y = 980
+        
         for person in hometeam + awayteam:
+            if person.x < 50:
+                person.x = 50
+            if person.x > 1750:
+                person.x = 1750
+            if person.y < 20:
+                person.y = 20
+            if person.y > 980:
+                person.y = 980
             state = agent.get_state(environment)
             #print(state)
             action = agent.choose_action(state)
@@ -337,7 +345,7 @@ def main():
                             print('shoot')
                         #print('pass complete')
             else:
-                if action == 'intercept':
+                if action == 'intercept' and current_holder is not None and distance(person.x,person.y,current_holder.x,current_holder.y) < 300:
                     #print("intercept")
                     person.intercept(ball)
             reward = calculate_reward(action, environment)

@@ -3,6 +3,7 @@ import sys
 import time
 import math
 
+import start1
 from map import lines
 from game import throwin,goalkick,kickoff,calculate_angle,distance
 import numpy as np
@@ -23,9 +24,10 @@ pi = 180
 RED = (255,0,0)
 
 myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
+startf = pygame.font.SysFont( "centurygothic", 50, True, False)
 goalpost1 = pygame.image.load('goalpost1.png')
 goalpost2 = pygame.image.load('goalpost1.png')
-
+a = pygame.image.load('')
 
 
 class Agent:
@@ -135,11 +137,11 @@ def calculate_reward(action, environment):
         for player in environment.hometeam + environment.awayteam:
             if current_holder is not None:
                 if current_holder.team == 'home' and player in environment.hometeam and action == 'move_right':
-                    return 100
+                    return 1000
                 elif current_holder.team == 'away' and player in environment.awayteam and action == 'move_left':
-                    return 100
+                    return 1000
             else:
-                return -90
+                return -900
 
     if action == 'intercept' and current_holder is None:
         for player in environment.hometeam + environment.awayteam:
@@ -148,9 +150,9 @@ def calculate_reward(action, environment):
                     return 150
 
     if action == 'shoot' and shoot_completed(environment.hometeam, environment.awayteam):
-        return 35000
+        return 150000
     if action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
-        return 5000
+        return 1000
     else:
         return -10
 
@@ -206,6 +208,7 @@ def goal_scored(ball):
 
 
 
+    
      
 def move_towards_ball(player, ball, speed):
     angle = calculate_angle(player.x, player.y, ball.x, ball.y)
@@ -224,126 +227,136 @@ def main():
     environment = Environment(hometeam, awayteam, ball)
 
     scoretext = myFont.render((str(homescore) + str(' - ') + str(awayscore)), True, (0, 0, 0))
-
+    startt = startf.render('test',True,(255,255,255))
     ball = Ball(12)
     map = Map()
     start_time = time.time()
+    
     while True:
         if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
             agent.save_q_table('q_table.pkl')
             main()
             return
+        def game_start():
+            if time.time() - start_time > 0:
+                return True
+            return False
+        
+        if game_start():
+            global current_holder
+            if ball.x < 50:
+                ball.x = 50
+            if ball.x > 1750:
+                ball.x = 1750
+            if ball.y < 20:
+                ball.y = 20
+            if ball.y > 980:
+                ball.y = 980
+            for person in hometeam + awayteam:
+                state = agent.get_state(environment)
+                action = agent.choose_action(state)
+                if action == 'move_up':
+                    person.moveup()
+                elif action == 'move_down':
+                    person.movedown()
+                elif action == 'move_left':
+                    person.moveleft()
+                elif action == 'move_right':
+                    person.moveright()
+                if person.ball_following:
+                    if action == 'pass':
+                        if person.ball_following:
+                            teammates = [p for p in (hometeam if person in hometeam else awayteam) if p != person]
+                            if teammates:
+                                target_player = random.choice(teammates)
+                                person.pass1(ball, target_player)
+                    elif action == 'search':
+                        person.search()
+                    elif action == 'shoot':
+                        x1 = 0
+                        x2 = 0
+                        y1 = 0
+                        y2 = 0
 
-        global current_holder
-        if ball.x < 50:
-            ball.x = 50
-        if ball.x > 1750:
-            ball.x = 1750
-        if ball.y < 20:
-            ball.y = 20
-        if ball.y > 980:
-            ball.y = 980
-        for person in hometeam + awayteam:
-            state = agent.get_state(environment)
-            action = agent.choose_action(state)
-            if action == 'move_up':
-                person.moveup()
-            elif action == 'move_down':
-                person.movedown()
-            elif action == 'move_left':
-                person.moveleft()
-            elif action == 'move_right':
-                person.moveright()
-            if person.ball_following:
-                if action == 'pass':
-                    if person.ball_following:
-                        teammates = [p for p in (hometeam if person in hometeam else awayteam) if p != person]
-                        if teammates:
-                            target_player = random.choice(teammates)
-                            person.pass1(ball, target_player)
-                elif action == 'search':
-                    person.search()
-                elif action == 'shoot':
-                    x1 = 0
-                    x2 = 0
-                    y1 = 0
-                    y2 = 0
+                        if current_holder is not None:
+                            if current_holder.team == 'away':
+                                x1 = 18
+                                x2 = 111
+                                y1 = 354
+                                y2 = 657
+                            if current_holder.team == 'home':
+                                x1 = 1691
+                                x2 = 1786
+                                y1 = 354
+                                y2 = 657
 
-                    if current_holder is not None:
-                        if current_holder.team == 'away':
-                            x1 = 18
-                            x2 = 111
-                            y1 = 354
-                            y2 = 657
-                        if current_holder.team == 'home':
-                            x1 = 1691
-                            x2 = 1786
-                            y1 = 354
-                            y2 = 657
+                            if abs(distance(current_holder.x, current_holder.y, (x1 + x2) / 2, (y1 + y2) / 2)) < 500:
+                                current_holder.shoot1(ball, x1, x2, y1, y2)
+                else:
+                    if action == 'intercept':
+                        person.intercept(ball)
+                reward = calculate_reward(action, environment)
+                next_state = agent.get_state(environment)
+                agent.learn(state, action, reward, next_state)
 
-                        if abs(distance(current_holder.x, current_holder.y, (x1 + x2) / 2, (y1 + y2) / 2)) < 500:
-                            current_holder.shoot1(ball, x1, x2, y1, y2)
-            else:
-                if action == 'intercept':
-                    person.intercept(ball)
-            reward = calculate_reward(action, environment)
-            next_state = agent.get_state(environment)
-            agent.learn(state, action, reward, next_state)
+            if not any(player.ball_following for player in hometeam + awayteam):
+                closest_player = min(hometeam + awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
+                move_towards_ball(closest_player, ball, closest_player.speed)
 
-        if not any(player.ball_following for player in hometeam + awayteam):
-            closest_player = min(hometeam + awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
-            move_towards_ball(closest_player, ball, closest_player.speed)
+            for i in hometeam:
+                d = distance(i.x, i.y, ball.x, ball.y)
+                if 0 <= d < ball.radius + i.radius and ball.speed < 3:
+                    i.ball_following = True
+                else:
+                    i.ball_following = False
+            for i in awayteam:
+                if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
+                    i.ball_following = True
+                else:
+                    i.ball_following = False
 
-        for i in hometeam:
-            d = distance(i.x, i.y, ball.x, ball.y)
-            if 0 <= d < ball.radius + i.radius and ball.speed < 3:
-                i.ball_following = True
-            else:
-                i.ball_following = False
-        for i in awayteam:
-            if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
-                i.ball_following = True
-            else:
-                i.ball_following = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    agent.save_q_table('q_table.pkl')
+                    pygame.quit()
+                    sys.exit()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                agent.save_q_table('q_table.pkl')
-                pygame.quit()
-                sys.exit()
+            if ball_moving:
+                ball.x -= math.cos(ball_angle) * ball.speed * -1
+                ball.y -= math.sin(ball_angle) * ball.speed * -1
+                ball.speed *= 0.99
+                if ball.speed < 0.2:
+                    ball_moving = False
+                    person.ball_following = False
+            for i in hometeam:
+                if i.ball_following:
+                    ball.x = i.x + math.cos(ball_angle) * 12
+                    ball.y = i.y + math.sin(ball_angle) * 12
+            for i in awayteam:
+                if i.ball_following:
+                    ball.x = i.x + math.cos(ball_angle) * 12
+                    ball.y = i.y + math.sin(ball_angle) * 12
 
-        if ball_moving:
-            ball.x -= math.cos(ball_angle) * ball.speed * -1
-            ball.y -= math.sin(ball_angle) * ball.speed * -1
-            ball.speed *= 0.99
-            if ball.speed < 0.2:
-                ball_moving = False
-                person.ball_following = False
-        for i in hometeam:
-            if i.ball_following:
-                ball.x = i.x + math.cos(ball_angle) * 12
-                ball.y = i.y + math.sin(ball_angle) * 12
-        for i in awayteam:
-            if i.ball_following:
-                ball.x = i.x + math.cos(ball_angle) * 12
-                ball.y = i.y + math.sin(ball_angle) * 12
+            clock.tick(FPS)
+            if game_start():
+                screen.fill((48, 131, 43))
+                lines()
+                person.draw()
+                for i in range(len(hometeam)):
+                    hometeam[i].draw()
+                    awayteam[i].draw()
+                ball.draw(person)
+                pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
+                screen.blit(scoretext, [173, 56])
+                
+                pygame.transform.flip(goalpost2, True, False)
 
-        clock.tick(FPS)
-        screen.fill((48, 131, 43))
-        lines()
-        person.draw()
-        for i in range(len(hometeam)):
-            hometeam[i].draw()
-            awayteam[i].draw()
-        ball.draw(person)
-        pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
-        screen.blit(scoretext, [173, 56])
-        pygame.transform.flip(goalpost2, True, False)
-
-        screen.blit(goalpost1, [1300, 285])
-        screen.blit(goalpost2, [-373, 285])
-        pygame.display.update()
-
+                screen.blit(goalpost1, [1300, 285])
+                screen.blit(goalpost2, [-373, 285])
+            pygame.display.update()
+        else:
+            screen.fill((255,255,255))
+            screen.blit(startt, [900,500])
 
 class Ball(): #공
     def __init__(self,radius):
@@ -396,7 +409,7 @@ class Person(): #선수
             if angle_difference < 0.1:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True
-                ball.speed = 5
+                ball.speed = 4
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False

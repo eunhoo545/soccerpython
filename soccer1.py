@@ -27,7 +27,7 @@ myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 startf = pygame.font.SysFont( "centurygothic", 50, True, False)
 goalpost1 = pygame.image.load('goalpost1.png')
 goalpost2 = pygame.image.load('goalpost1.png')
-a = pygame.image.load('')
+#a = pygame.image.load('')
 
 
 class Agent:

@@ -2,32 +2,21 @@ import pygame
 import sys
 import random
 import soccer1
-import settings
-# 초기화
+import start1
 pygame.init()
-font = pygame.font.SysFont('msgothic',20,False,False)
-# 화면 크기 및 색상 설정
 width, height = 1800, 1000
+
+screen = pygame.display.set_mode((width, height))
 white = (255, 255, 255)
 black = (0, 0, 0)
 button_color = (0,0,0)
 button_hover_color = (0,20,0)
 button_width, button_height = 150, 50
-
-# 화면 설정
-screen = pygame.display.set_mode((width, height))
-
-
-# 버튼 설정
 button_x, button_y = 900,500
 button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-button2_x, button2_y = 900,650
+    
+button2_x, button2_y = 900,575
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
-button3_x, button3_y = 900,575
-button3_rect = pygame.Rect(button3_x, button3_y, button_width, button_height)
-
-# 이동할 위치 (상대적)
-move_x, move_y = 100, 100
 
 def draw_button():
     mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -43,12 +32,14 @@ def draw_button():
     else:
         pygame.draw.rect(screen, button_color, button2_rect)
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-    if button3_rect.collidepoint((mouse_x, mouse_y)):
-        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-        pygame.draw.rect(screen, button_hover_color, button3_rect)
-    else:
-        pygame.draw.rect(screen, button_color, button3_rect)
-        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)     
+    #if button2_rect.collidepoint((mouse_x, mouse_y)):
+    #    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    #    pygame.draw.rect(screen, button_hover_color, button3_rect)
+    #else:
+    #    pygame.draw.rect(screen, button_color, button3_rect)
+    #    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)   
+font = pygame.font.SysFont('msgothic',20,False,False)
+
 
 def main():
     global button_x, button_y, screen, button_rect, button2_x, button2_y, button2_rect
@@ -67,22 +58,24 @@ def main():
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
                     pygame.display.set_mode((width, height))  # 화면 크기 리셋
                     button_rect.topleft = (button_x, button_y)
-                    soccer1.main()
+                    start1.main()
                 if button2_rect.collidepoint(event.pos):
-                    pygame.quit()
-                    sys.exit()
-                if button3_rect.collidepoint(event.pos):
-                    settings.main()
+                    if soccer1.X == True:
+                        soccer1.X = False
+                    else:
+                        soccer1.X = True
+                #if button3_rect.collidepoint(event.pos):
+                   # print('settings')
                     
         screen.fill((57,129,69))
-        text = font.render('Play',0,(255,255,255))
-        text2 = font.render('Quit',0,(255,255,255))
-        text3 = font.render('Settings',0,(255,255,255))
+        text = font.render('BACK',0,(255,255,255))
+        text2 = font.render(str(soccer1.X),0,(255,255,255))
+        #text3 = font.render('Settings',0,(255,255,255))
         #text3 = font.render('Settings',0,(255,255,255))
         draw_button()
         screen.blit(text,[930,515])
-        screen.blit(text3,[930,590])
-        screen.blit(text2,[930,665])
+        screen.blit(text2,[930,590])
+       #screen.blit(text2,[930,665])
         pygame.display.flip()
         clock.tick(30)
         

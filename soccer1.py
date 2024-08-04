@@ -22,7 +22,7 @@ pygame.init()
 clock = pygame.time.Clock()
 pi = 180
 RED = (255,0,0)
-
+X = False
 myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 startf = pygame.font.SysFont( "centurygothic", 50, True, False)
 goalpost1 = pygame.image.load('goalpost1.png')
@@ -137,11 +137,11 @@ def calculate_reward(action, environment):
         for player in environment.hometeam + environment.awayteam:
             if current_holder is not None:
                 if current_holder.team == 'home' and player in environment.hometeam and action == 'move_right':
-                    return 1000
+                    return 10000
                 elif current_holder.team == 'away' and player in environment.awayteam and action == 'move_left':
-                    return 1000
+                    return 10000
             else:
-                return -900
+                return -9000
 
     if action == 'intercept' and current_holder is None:
         for player in environment.hometeam + environment.awayteam:
@@ -233,6 +233,34 @@ def main():
     start_time = time.time()
     
     while True:
+        if ball.x <= 120 - ball.radius:
+            if ball.y <350 or ball.y > 650:
+                print('g')
+            else:
+                print('골1')
+                
+                awayscore += 1
+                
+                scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
+                time.sleep(1)
+                ball.x = 905
+                ball.y = 505
+                ball_moving = False
+        if ball.x >= 1680 + ball.radius:
+            if ball.y <375 or ball.y > 625:
+                print('g')
+            else:
+                homescore += 1
+                print('골2')
+                scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
+                time.sleep(1)
+                ball.x = 905
+                ball.y = 505
+                ball_moving = False
+                if ball.y <370:
+                    ball.y = 370
+                if ball.y >630:
+                    ball.y = 630
         if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
             agent.save_q_table('q_table.pkl')
             main()

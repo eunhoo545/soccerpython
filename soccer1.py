@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 import math
-
+import time
 import start1
 from map import lines
 from game import throwin,goalkick,kickoff,calculate_angle,distance

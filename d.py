@@ -64,7 +64,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    screen.fill((0, 0, 0))
+    screen.fill((57,129,69))
     state = get_state(angle)
     action = choose_action(state)
     angle = update(angle, action)

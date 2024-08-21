@@ -1,22 +1,90 @@
 import pygame
 import sys
 import random
-import soccer1
+#import soccer1
 import start1
-pygame.init()
-width, height = 1800, 1000
+#import playerset
+import json
 
-screen = pygame.display.set_mode((width, height))
+def load_setting():
+    with open("settings.json", 'r') as file:
+        config = json.load(file)
+    return config
+
+
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+
 white = (255, 255, 255)
 black = (0, 0, 0)
 button_color = (0,0,0)
 button_hover_color = (0,20,0)
 button_width, button_height = 150, 50
-button_x, button_y = 900,500
+pygame.init()
+width, height = 1800, 1000
+button_x, button_y = 600,100
 button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-    
-button2_x, button2_y = 900,575
+button2_x, button2_y = 1000,100
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
+screen = pygame.display.set_mode((width, height))
+# 폰트 설정
+font = pygame.font.Font(None, 32)
+clock = pygame.time.Clock()
+bluepass = font.render('passpower  1~10',0,(255,255,255))
+blueshoot = font.render('shootpower  1~10',0,(255,255,255))
+redshoot = font.render('shootpower  1~10',0,(255,255,255))
+redpass = font.render('passpower  1~10',0,(255,255,255))
+bluerunspeed = font.render('speed  1~10',0,(255,255,255))
+redrunspeed = font.render('speed  1~10',0,(255,255,255))
+save = font.render('save settings',0,(255,255,255))
+reset = font.render('reset',0,(255,255,255))
+
+class InputBox:
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = GRAY
+        self.text = text
+        self.txt_surface = font.render(text, True, BLACK)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active #1회 클릭시 활성화, 1회 더 클릭시 비활성화
+            else:
+                self.active = False
+
+            if self.active:
+                self.color = BLACK
+            else:
+                self.color = GRAY
+            
+
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = '' #엔터누르면 초기화
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    print(ord(event.unicode))
+                    if ord(event.unicode) >= 48 and ord(event.unicode) <= 57:
+                         self.text += event.unicode
+                     #unicode값: 내가 입력한 키 이야기 하는것.
+                self.txt_surface = font.render(self.text, True, BLACK)
+
+    def update(self):
+        width = max(200, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+
+
 
 def draw_button():
     mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -32,53 +100,61 @@ def draw_button():
     else:
         pygame.draw.rect(screen, button_color, button2_rect)
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-    #if button2_rect.collidepoint((mouse_x, mouse_y)):
-    #    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-    #    pygame.draw.rect(screen, button_hover_color, button3_rect)
-    #else:
-    #    pygame.draw.rect(screen, button_color, button3_rect)
-    #    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)   
-font = pygame.font.SysFont('msgothic',20,False,False)
 
 
-def main():
-    global button_x, button_y, screen, button_rect, button2_x, button2_y, button2_rect
-    clock = pygame.time.Clock()
+
+def main(width,height):
+
+    setting = load_setting()
+    screen = pygame.display.set_mode((width, height))
     running = True
+    input_box1 = InputBox(300, 100, 50, 32, setting['bluepasspower']) 
+    input_box2 = InputBox(300,200,50,32, setting['blueshootpower'])
+    input_box3 = InputBox(1150, 100, 50, 32, setting['redshootpower'])
+    input_box4 = InputBox(1150,200,50,32, setting['redpasspower'])
+    input_box5 = InputBox(1150, 300, 50, 32, setting['redrunspeed'])
+    input_box6 = InputBox(300,300,50,32, setting['bluerunspeed'])
+    input_boxes = [input_box1,input_box2,input_box3,input_box4,input_box5,input_box6]
 
     while running:
-        print(soccer1.X)
+        #print(soccer1.X)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            for box in input_boxes:
+                box.handle_event(event)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
-                    # 버튼 클릭 시 창 이
-                    screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-                    pygame.display.set_mode((width, height))  # 화면 크기 리셋
-                    button_rect.topleft = (button_x, button_y)
-                    start1.main()
                 if button2_rect.collidepoint(event.pos):
-                    if soccer1.X == True:
-                        soccer1.X = False
-                    else:
-                        soccer1.X = True
-                #if button3_rect.collidepoint(event.pos):
-                   # print('settings')
-                    
+                    setting['bluepasspower'] = input_box1.text
+                    setting['blueshootpower'] = input_box2.text
+                    setting['redpasspower'] = input_box3.text
+                    setting['redshootpower'] = input_box4.text
+                    setting['redrunspeed'] = input_box5.text
+                    setting['bluerunspeed'] = input_box6.text
+                    with open("settings.json", 'w') as file:
+                        json.dump(setting, file, ensure_ascii=False, indent=4)
+                
+        for box in input_boxes:
+            box.update()
+
         screen.fill((57,129,69))
-        text = font.render('BACK',0,(255,255,255))
-        text2 = font.render(str(soccer1.X),0,(255,255,255))
-        #text3 = font.render('Settings',0,(255,255,255))
-        #text3 = font.render('Settings',0,(255,255,255))
+        for box in input_boxes:
+            box.draw(screen)
+        
+        
         draw_button()
-        screen.blit(text,[930,515])
-        screen.blit(text2,[930,590])
-       #screen.blit(text2,[930,665])
+        screen.blit(bluepass,[100,100])
+        screen.blit(blueshoot,[100,200])
+        screen.blit(redshoot,[1400,200])
+        screen.blit(redpass,[1400,100])
+        screen.blit(bluerunspeed,[100,300])
+        screen.blit(redrunspeed,[1400,300])
+        screen.blit(reset,[630,120])
+        screen.blit(save,[1030,120])
         pygame.display.flip()
         clock.tick(30)
-        
+#한개만 더만들어서 red, blue 수치 기록 하는걸로.      
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,8 @@
 {
-    "bluepasspower": "3",
-    "blueshootpower": "3",
-    "redpasspower": "2",
-    "redshootpower": "4",
-    "redrunspeed": "2",
-    "bluerunspeed": "1"
+    "bluepasspower": "5",
+    "blueshootpower": "5",
+    "bluerunspeed": "51521",
+    "redpasspower": "5",
+    "redshootpower": "80",
+    "redrunspeed": "52123"
 }

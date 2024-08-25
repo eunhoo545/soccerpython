@@ -46,8 +46,10 @@ class InputBox:
         self.rect = pygame.Rect(x, y, w, h)
         self.color = GRAY
         self.text = text
-        self.txt_surface = font.render(text, True, BLACK)
+        self.txt_surface = font.render(self.text, True, BLACK)
         self.active = False
+    def set_text(self,text):
+        self.text = text
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -61,13 +63,11 @@ class InputBox:
             else:
                 self.color = GRAY
             
-
+        
         if event.type == pygame.KEYDOWN:
             if self.active:
-                if event.key == pygame.K_RETURN:
-                    print(self.text)
-                    self.text = '' #엔터누르면 초기화
-                elif event.key == pygame.K_BACKSPACE:
+                
+                if event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
                     print(ord(event.unicode))
@@ -132,8 +132,33 @@ def main(width,height):
                     setting['redshootpower'] = input_box4.text
                     setting['redrunspeed'] = input_box5.text
                     setting['bluerunspeed'] = input_box6.text
+                    
+                    
                     with open("settings.json", 'w') as file:
                         json.dump(setting, file, ensure_ascii=False, indent=4)
+                if button2_rect.collidepoint(event.pos):
+                    start1.main()
+                        
+                    
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    input_box1.set_text("5")
+                    input_box2.set_text("5")
+                    input_box3.set_text("5")
+                    input_box4.set_text("5")
+                    input_box5.set_text("5")
+                    input_box6.set_text("5")
+                    setting['bluepasspower'] = "5"
+                    setting['blueshootpower'] = "5"
+                    setting['redpasspower'] = "5"
+                    setting['redshootpower'] = "5"
+                    setting['redrunspeed'] = "5"
+                    setting['bluerunspeed'] = "5"
+                            
+                    with open("settings.json", 'w') as file:
+                        json.dump(setting, file, ensure_ascii=False, indent=4)
+                if button_rect.collidepoint(event.pos):
+                    start1.main()
                 
         for box in input_boxes:
             box.update()
@@ -141,7 +166,6 @@ def main(width,height):
         screen.fill((57,129,69))
         for box in input_boxes:
             box.draw(screen)
-        
         
         draw_button()
         screen.blit(bluepass,[100,100])

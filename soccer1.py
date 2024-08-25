@@ -9,7 +9,8 @@ from game import throwin,goalkick,kickoff,calculate_angle,distance
 import numpy as np
 import random
 import pickle  # Q-테이블을 파일로 저장하고 불러오기 위한 모듈
-
+import settings
+import json
 
 ball_moving = False
 ball_angle = 0
@@ -67,11 +68,26 @@ class Agent:
 
 
 class Environment:
+    
     def __init__(self, hometeam, awayteam, ball):
+        
         self.hometeam = hometeam
         self.awayteam = awayteam
         self.ball = ball
+        self.last_holder = None
 
+
+
+    def update_last_holder(self):
+        for player in self.hometeam + self.awayteam:
+            if player.ball_following:
+                self.last_holder = player
+                print(f"공의 현재 소유자 업데이트: {self.last_holder.team} 팀의 선수")
+                break
+        
+    def get_last_holder(self):
+        return self.last_holder
+             
     def get_positions(self):
         players = self.hometeam + self.awayteam
         distances = [(distance(player.x, player.y, self.ball.x, self.ball.y), player) for player in players]
@@ -84,22 +100,19 @@ class Environment:
 
 
 class Map():    
+    playing = True
     throwin = False
     game = True
     goalkick = False
     cornerkick = False
 
-def throwin(person,ball,y,map):
-    time.sleep(1)
+def throwin(ballx,bally,closestplr):
     #print('throwin')
-    map.throwin = True
-    ball.x = ball.x
-    ball.y = y- ball.radius
-    ball_moving= False
-    person.ball_following = False
-    ball.speed = 0
-    person.x = ball.x
-    person.y = ball.y +20
+    time.sleep(1)
+
+    #for i in hometeam + awayteam:
+        
+            
 def kickoff():
     #print('kickoff')
     time.sleep(1)
@@ -225,7 +238,7 @@ def main():
     awayteam = []
     hometeam, awayteam, ball = setup_teams_and_ball()
     environment = Environment(hometeam, awayteam, ball)
-
+    last_holder = environment.get_last_holder()
     scoretext = myFont.render((str(homescore) + str(' - ') + str(awayscore)), True, (0, 0, 0))
     startt = startf.render('test',True,(255,255,255))
     ball = Ball(12)
@@ -233,9 +246,23 @@ def main():
     start_time = time.time()
     
     while True:
+        global setting
+
+        
+        setting = settings.load_setting()
+        
+        environment.update_last_holder()
+
+        #if environment.last_holder is not None:
+        #    print(f"마지막 소유자는 {environment.last_holder.team} 팀의 선수이며, 위치는 ({environment.last_holder.x}, {environment.last_holder.y})입니다.")
+        #else:
+        #    
+        #    print("마지막 소유자를 찾을 수 없습니다.")
+
+        print(setting)
         if ball.x <= 120 - ball.radius:
             if ball.y <350 or ball.y > 650:
-                print('g')
+                print('goalkick')
             else:
                 print('골1')
                 
@@ -248,7 +275,7 @@ def main():
                 ball_moving = False
         if ball.x >= 1680 + ball.radius:
             if ball.y <375 or ball.y > 625:
-                print('g')
+                print('goalkick')
             else:
                 homescore += 1
                 print('골2')
@@ -280,9 +307,14 @@ def main():
                 ball.y = 20
             if ball.y > 980:
                 ball.y = 980
+            
+        
+            
+            
             for person in hometeam + awayteam:
                 state = agent.get_state(environment)
                 action = agent.choose_action(state)
+                
                 if action == 'move_up':
                     person.moveup()
                 elif action == 'move_down':
@@ -328,8 +360,10 @@ def main():
                 agent.learn(state, action, reward, next_state)
 
             if not any(player.ball_following for player in hometeam + awayteam):
-                closest_player = min(hometeam + awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
+                closest_player = min(hometeam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
+                closest_player2 = min(awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
                 move_towards_ball(closest_player, ball, closest_player.speed)
+                move_towards_ball(closest_player2, ball, closest_player.speed)
 
             for i in hometeam:
                 d = distance(i.x, i.y, ball.x, ball.y)
@@ -338,7 +372,8 @@ def main():
                 else:
                     i.ball_following = False
             for i in awayteam:
-                if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
+                d = distance(i.x, i.y, ball.x, ball.y)
+                if 0 <= d < ball.radius + i.radius and ball.speed < 3:
                     i.ball_following = True
                 else:
                     i.ball_following = False
@@ -401,13 +436,18 @@ class Ball(): #공
             pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
     
 class Person(): #선수
+    
     def __init__(self,radius,x,y,team):
+        
         self.x = x
         self.y = y
         self.radius = radius
-        self.speed = 2
-        self.team = team
         
+        self.team = team
+        if self.team == 'home':
+            self.speed = int(setting['redrunspeed'])
+        if self.team == 'away':
+            self.speed = int(setting['bluerunspeed'])
         self.ball_following = False
         
 
@@ -437,7 +477,10 @@ class Person(): #선수
             if angle_difference < 0.1:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True
-                ball.speed = 4
+                if current_holder in awayteam:
+                    ball.speed = int(setting['bluepasspower'])*0.6
+                if current_holder in hometeam:  
+                    ball.speed = int(setting['redpasspower'])*0.6
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False
@@ -452,7 +495,11 @@ class Person(): #선수
             if angle_difference < 0.2:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True
-                ball.speed = 7
+                if current_holder in awayteam:
+                    ball.speed = int(setting['blueshootpower'])
+                if current_holder in hometeam:  
+                    ball.speed = int(setting['redshootpower'])
+
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False

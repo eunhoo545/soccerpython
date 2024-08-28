@@ -2,20 +2,19 @@ import pygame
 import sys
 import time
 import math
-import time
+
 import start1
 from map import lines
-from game import throwin,goalkick,kickoff,calculate_angle,distance
+from game import throwin,goalkick,kickoff,calculate_angle
 import numpy as np
 import random
 import pickle  # Q-테이블을 파일로 저장하고 불러오기 위한 모듈
-import settings
-import json
+
 
 ball_moving = False
 ball_angle = 0
 current_holder = None
-FPS = 60
+FPS = 600
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
 screen = pygame.display.set_mode((MAX_WIDTH,MAX_HEIGHT))
@@ -23,7 +22,7 @@ pygame.init()
 clock = pygame.time.Clock()
 pi = 180
 RED = (255,0,0)
-X = False
+
 myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 startf = pygame.font.SysFont( "centurygothic", 50, True, False)
 goalpost1 = pygame.image.load('goalpost1.png')
@@ -34,85 +33,75 @@ goalpost2 = pygame.image.load('goalpost1.png')
 class Agent:
 
     def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.9):
-        self.q_table = {}
-        self.actions = actions
-        self.lr = learning_rate
-        self.gamma = discount_factor
-        self.epsilon = epsilon
+        self.q_table = {}      #딕셔너리 형태로 Q table 정리
+        self.actions = actions      #행동
+        self.lr = learning_rate     #배우는속도
+        self.gamma = discount_factor     #Q 러닝에서 식에들어가는값, 미래의 가치에 대한 현재가치의 판단비율  
+        self.epsilon = epsilon      #입실론이 크면 qtable참조를 하지않고 랜덤하게 값을 고른다
 
-    def get_state(self, environment):
+    def get_state(self, environment):       #state를 가져온다 get_positions를 사용해서 튜플형태로 위치반환
         positions = environment.get_positions()
-        return tuple(positions)
+        return tuple(positions)         #튜플로 위치반환 (x.y)
 
-    def choose_action(self, state):
-        if np.random.rand() < self.epsilon:
-            return np.random.choice(self.actions)
-        else:
-            return max(self.q_table.get(state, {}), key=self.q_table.get(state, {}).get, default=np.random.choice(self.actions))
+    def choose_action(self, state):     #입실론을 사용해서행동을 고름
+        if np.random.rand() < self.epsilon:     #입실론 값보다 랜덤한값(0~1)이 더 작을때 랜덤한행동을 한다 (90%확률)
+            return np.random.choice(self.actions)       #랜덤한행동을 한다
+        else:           #랜덤값이 더 클때(10%)
+            return max(self.q_table.get(state, {}), key=self.q_table.get(state, {}).get, default=np.random.choice(self.actions))   
+        #현재 state와 일치하는 qtable에서 가장 큰 보상을 획득하고 반환
 
-    def learn(self, state, action, reward, next_state):
-        prev_value = self.q_table.get(state, {}).get(action, 0)
-        future_value = max(self.q_table.get(next_state, {}).values(), default=0)
+        
+    def learn(self, state, action, reward, next_state):         #배운다
+        prev_value = self.q_table.get(state, {}).get(action, 0)     #액션을 취하기 전 state 조회
+        future_value = max(self.q_table.get(next_state, {}).values(), default=0)        #액션을 취한 후 state 조회
         self.q_table.setdefault(state, {})[action] = prev_value + self.lr * (reward + self.gamma * future_value - prev_value)
 
     def save_q_table(self, filename):
-        with open(filename, 'wb') as f:
-            pickle.dump(self.q_table, f)
+        with open(filename, 'wb') as f:     #매개변수로 들어오는 filename을 쓰기 권한으로 연다
+            pickle.dump(self.q_table, f)        #q table을 파일에 쓰기
 
-    def load_q_table(self, filename):
-        try:
+    def load_q_table(self, filename):       #저장된 qtable을 불러옥;
+        try:        
             with open(filename, 'rb') as f:
-                self.q_table = pickle.load(f)
+                self.q_table = pickle.load(f)       
         except FileNotFoundError:
             print(f"File {filename} not found. Starting with an empty Q-table.")
 
 
-class Environment:
-    
+class Environment:      #환경
     def __init__(self, hometeam, awayteam, ball):
-        
-        self.hometeam = hometeam
+        self.hometeam = hometeam   
         self.awayteam = awayteam
         self.ball = ball
-        self.last_holder = None
 
-
-
-    def update_last_holder(self):
-        for player in self.hometeam + self.awayteam:
-            if player.ball_following:
-                self.last_holder = player
-                print(f"공의 현재 소유자 업데이트: {self.last_holder.team} 팀의 선수")
-                break
-        
-    def get_last_holder(self):
-        return self.last_holder
-             
-    def get_positions(self):
-        players = self.hometeam + self.awayteam
-        distances = [(distance(player.x, player.y, self.ball.x, self.ball.y), player) for player in players]
-        distances.sort(key=lambda x: x[0])
-        closest_players = distances[:3]
-        positions = [(player.x // 100 * 100, player.y // 100 * 100) for _, player in closest_players]
-        positions.append((self.ball.x // 100 * 100, self.ball.y // 100 * 100))
-        return positions
+    def get_positions(self):        #위치 가져오기
+        players = self.hometeam + self.awayteam  
+        distances = [(distance(player.x, player.y, self.ball.x, self.ball.y), player) for player in players]        #플레이어들과 공 사이의 거리를 조회해서 리스트에 저장
+        distances.sort(key=lambda x: x[0])      #가까운 순서대로 정렬
+        closest_players = distances[:3]     #가장 가까운 세명
+        positions = [(player.x // 100 * 100, player.y // 100 * 100) for _, player in closest_players]       #가까운 세명의 x와 y좌표를 100단위로 저장
+        positions.append((self.ball.x // 100 * 100, self.ball.y // 100 * 100))      
+        return positions            #반환
 
 
 
 class Map():    
-    playing = True
-    throwin = False
+    throwin = False     
     game = True
     goalkick = False
     cornerkick = False
 
-def throwin(ballx,bally,closestplr):
-    #print('throwin')
+def throwin(person,ball,y,map):
     time.sleep(1)
-
-    #for i in hometeam + awayteam:
-        
-            
+    #print('throwin')
+    map.throwin = True
+    ball.x = ball.x
+    ball.y = y- ball.radius
+    ball_moving= False
+    person.ball_following = False
+    ball.speed = 0
+    person.x = ball.x
+    person.y = ball.y +20
 def kickoff():
     #print('kickoff')
     time.sleep(1)
@@ -130,12 +119,30 @@ def pass_completed(hometeam, awayteam):
     return False
 
 
-def shoot_completed(hometeam, awayteam):
-    global current_holder
-    current_holder = next((player for player in hometeam + awayteam if player.ball_following), None)
+def shoot_completed(ball):
+    goal_y_min = 370
+    goal_y_max = 630
+    home_goal_x = 0
+    away_goal_x = 1800
+
+    if goal_y_min <= ball.y <= goal_y_max:
+        if ball.x <= ball.radius + home_goal_x:
+            print("슛 성공: 홈팀 골!")
+            return True
+        elif ball.x >= away_goal_x - ball.radius:
+            print("슛 성공: 어웨이팀 골!")
+            return True
     return False
 
-
+def calculate_average_distance(players):
+    total_distance = 0
+    count = 0
+    for i, player1 in enumerate(players):
+        for j, player2 in enumerate(players):
+            if i < j:
+                total_distance += distance(player1.x, player1.y, player2.x, player2.y)
+                count += 1
+    return total_distance / count if count > 0 else float('inf')
 def distance(x1, y1, x2, y2):#거리계산
     return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
 def calculate_angle(x1, y1, x2, y2):        #각도계산
@@ -150,19 +157,24 @@ def calculate_reward(action, environment):
         for player in environment.hometeam + environment.awayteam:
             if current_holder is not None:
                 if current_holder.team == 'home' and player in environment.hometeam and action == 'move_right':
-                    return 10000
+                    return 1000
                 elif current_holder.team == 'away' and player in environment.awayteam and action == 'move_left':
-                    return 10000
+                    return 1000
             else:
-                return -9000
-
+                return -900
+    if action in ['move_up', 'move_down', 'move_left', 'move_right'] and current_holder is not None:
+        teammates = environment.hometeam if current_holder.team == 'home' else environment.awayteam
+        avg_distance = calculate_average_distance(teammates)
+        if avg_distance < 200:
+            print("뭉쳐서 패널티")
+            return -500
     if action == 'intercept' and current_holder is None:
         for player in environment.hometeam + environment.awayteam:
             if player.ball_following:
                 if player.team != current_holder.team and distance(player.x, player.y, environment.ball.x, environment.ball.y) < player.radius + environment.ball.radius:
                     return 150
 
-    if action == 'shoot' and shoot_completed(environment.hometeam, environment.awayteam):
+    if action == 'shoot' and shoot_completed(ball):
         return 150000
     if action == 'pass' and pass_completed(environment.hometeam, environment.awayteam):
         return 1000
@@ -201,6 +213,7 @@ def setup_teams_and_ball():
         Person(15, 1624, 498, 'away', )
     ]
     # 공 생성
+    global ball
     ball = Ball(12)    
     return hometeam, awayteam, ball
 
@@ -238,7 +251,7 @@ def main():
     awayteam = []
     hometeam, awayteam, ball = setup_teams_and_ball()
     environment = Environment(hometeam, awayteam, ball)
-    last_holder = environment.get_last_holder()
+
     scoretext = myFont.render((str(homescore) + str(' - ') + str(awayscore)), True, (0, 0, 0))
     startt = startf.render('test',True,(255,255,255))
     ball = Ball(12)
@@ -246,48 +259,6 @@ def main():
     start_time = time.time()
     
     while True:
-        global setting
-
-        
-        setting = settings.load_setting()
-        
-        environment.update_last_holder()
-
-        #if environment.last_holder is not None:
-        #    print(f"마지막 소유자는 {environment.last_holder.team} 팀의 선수이며, 위치는 ({environment.last_holder.x}, {environment.last_holder.y})입니다.")
-        #else:
-        #    
-        #    print("마지막 소유자를 찾을 수 없습니다.")
-
-        print(setting)
-        if ball.x <= 120 - ball.radius:
-            if ball.y <350 or ball.y > 650:
-                print('goalkick')
-            else:
-                print('골1')
-                
-                awayscore += 1
-                
-                scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (0,0,0))
-                time.sleep(1)
-                ball.x = 905
-                ball.y = 505
-                ball_moving = False
-        if ball.x >= 1680 + ball.radius:
-            if ball.y <375 or ball.y > 625:
-                print('goalkick')
-            else:
-                homescore += 1
-                print('골2')
-                scoretext= myFont.render((str(homescore)+str(' - ')+str(awayscore)), True, (59,7,68))
-                time.sleep(1)
-                ball.x = 905
-                ball.y = 505
-                ball_moving = False
-                if ball.y <370:
-                    ball.y = 370
-                if ball.y >630:
-                    ball.y = 630
         if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
             agent.save_q_table('q_table.pkl')
             main()
@@ -298,82 +269,74 @@ def main():
             return False
         
         if game_start():
-            global current_holder
-            if ball.x < 50:
+            global current_holder 
+            if ball.x < 50:         
                 ball.x = 50
             if ball.x > 1750:
                 ball.x = 1750
             if ball.y < 20:
                 ball.y = 20
             if ball.y > 980:
-                ball.y = 980
-            
-        
-            
-            
-            for person in hometeam + awayteam:
-                state = agent.get_state(environment)
-                action = agent.choose_action(state)
-                
-                if action == 'move_up':
-                    person.moveup()
+                ball.y = 980            #공이 화면밖으로 나가지 않게 한다
+            for person in hometeam + awayteam:      #모든플레이어 조회
+                state = agent.get_state(environment)        #위치를 불러온다 (state 획득)
+                action = agent.choose_action(state)         #할 행동을 고른다
+                if action == 'move_up':     
+                    person.moveup(environment)
+                    
                 elif action == 'move_down':
-                    person.movedown()
+                    person.movedown(environment)
                 elif action == 'move_left':
-                    person.moveleft()
+                    person.moveleft(environment)
                 elif action == 'move_right':
-                    person.moveright()
-                if person.ball_following:
-                    if action == 'pass':
-                        if person.ball_following:
-                            teammates = [p for p in (hometeam if person in hometeam else awayteam) if p != person]
-                            if teammates:
-                                target_player = random.choice(teammates)
-                                person.pass1(ball, target_player)
-                    elif action == 'search':
-                        person.search()
-                    elif action == 'shoot':
+                    person.moveright(environment)              #플레이어가 움직이는 액션일 경우의 처리
+                if person.ball_following:           #플레이어가 공을 잡고있을때
+                    if action == 'pass':            #플레이어가 패스
+                        teammates = [p for p in (hometeam if person in hometeam else awayteam) if p != person]  #공을 잡은 플레이어의 팀선수들 (공을 잡은 사람 제외) 
+                        if teammates:       
+                            target_player = random.choice(teammates)        #랜덤으로 패스받을 선수 선택
+                            person.pass1(ball, target_player)           #패스
+                    elif action == 'search':           #액션이 search 일때 처리
+                        person.search()         #search 함수
+                    elif action == 'shoot':         #액션이 shoot일때
                         x1 = 0
                         x2 = 0
                         y1 = 0
-                        y2 = 0
+                        y2 = 0                           
 
                         if current_holder is not None:
-                            if current_holder.team == 'away':
+                            if current_holder.team == 'away':         #공을 잡고있는 선수가 away 팀일때 골대의 위치
                                 x1 = 18
                                 x2 = 111
                                 y1 = 354
                                 y2 = 657
-                            if current_holder.team == 'home':
+                            if current_holder.team == 'home':           #공을 잡고있는 선수가 home 팀일때 골대의 위치
                                 x1 = 1691
                                 x2 = 1786
                                 y1 = 354
                                 y2 = 657
 
-                            if abs(distance(current_holder.x, current_holder.y, (x1 + x2) / 2, (y1 + y2) / 2)) < 500:
-                                current_holder.shoot1(ball, x1, x2, y1, y2)
+                            if abs(distance(current_holder.x, current_holder.y, (x1 + x2) / 2, (y1 + y2) / 2)) < 500:       #공을 잡은 플레이어와 목표 골대사이의 거리가 500보다 작을때
+                                current_holder.shoot1(ball, x1, x2, y1, y2)             #목표 골대로 슛
                 else:
-                    if action == 'intercept':
-                        person.intercept(ball)
-                reward = calculate_reward(action, environment)
-                next_state = agent.get_state(environment)
-                agent.learn(state, action, reward, next_state)
+                    if action == 'intercept':           #액션이 intercept 일때
+                        person.intercept(ball)          #인터셉트 함수
+                reward = calculate_reward(action, environment)      #어떤 액션에 대한 보상
+                next_state = agent.get_state(environment)           #액션 이후의 state 가져오기
+                agent.learn(state, action, reward, next_state)      #학습
 
-            if not any(player.ball_following for player in hometeam + awayteam):
-                closest_player = min(hometeam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
-                closest_player2 = min(awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
-                move_towards_ball(closest_player, ball, closest_player.speed)
-                move_towards_ball(closest_player2, ball, closest_player.speed)
+            if not any(player.ball_following for player in hometeam + awayteam):        #공을 잡고있지 않은 아무 플레이어
+                closest_player = min(hometeam + awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))     #home팀과 away팀의 플레이어들중 공과의 거리가 가장 작은 선수
+                move_towards_ball(closest_player, ball, closest_player.speed)       #가장 가까운 플레이어를 공으로 이동시킴
 
-            for i in hometeam:
-                d = distance(i.x, i.y, ball.x, ball.y)
+            for i in hometeam:        #home팀
+                d = distance(i.x, i.y, ball.x, ball.y)      #공과 플레이어들의 거리
                 if 0 <= d < ball.radius + i.radius and ball.speed < 3:
                     i.ball_following = True
                 else:
                     i.ball_following = False
             for i in awayteam:
-                d = distance(i.x, i.y, ball.x, ball.y)
-                if 0 <= d < ball.radius + i.radius and ball.speed < 3:
+                if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
                     i.ball_following = True
                 else:
                     i.ball_following = False
@@ -436,30 +399,49 @@ class Ball(): #공
             pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
     
 class Person(): #선수
-    
     def __init__(self,radius,x,y,team):
-        
         self.x = x
         self.y = y
         self.radius = radius
-        
+        self.speed = 2
         self.team = team
-        if self.team == 'home':
-            self.speed = int(setting['redrunspeed'])
-        if self.team == 'away':
-            self.speed = int(setting['bluerunspeed'])
-        self.ball_following = False
         
+        self.ball_following = False
+    
+    def distance(x1, y1, x2, y2):
+        return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+    
+    def get_closest_player(self,environment):
+        if self.team == 'home':
+            teammates = environment.hometeam
+        else:
+            teammates = environment.awayteam
+        closest_player = min(
+            (p for p in environment.hometeam if p != self),
+            key=lambda p: distance(self.x, self.y, p.x, p.y),
+            default=None  
+        )
+        print(self.x,self.y,closest_player.x,closest_player.y)
+        dist = distance(self.x, self.y, closest_player.x, closest_player.y)
 
-    def moveup(self):
-        self.y -= self.speed
-    def movedown(self):
-        self.y += self.speed
-    def moveright(self):
-        self.x += self.speed
-    def moveleft(self):
-        self.x -= self.speed
-
+        return dist
+    def moveup(self,environment):
+        dist = self.get_closest_player(environment)
+        if dist >= 30:
+            self.y -= self.speed
+    def movedown(self,environment):
+        dist = self.get_closest_player(environment)
+        if dist >= 30:
+            self.y += self.speed
+    def moveright(self,environment):
+        dist = self.get_closest_player(environment)
+        if dist >= 30:
+            self.x += self.speed
+    def moveleft(self,environment):
+        dist = self.get_closest_player(environment)
+        if dist >= 30:
+            self.x -= self.speed
+    
     def search(self):
         global ball_angle
         if self.ball_following:
@@ -477,10 +459,7 @@ class Person(): #선수
             if angle_difference < 0.1:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True
-                if current_holder in awayteam:
-                    ball.speed = int(setting['bluepasspower'])*0.6
-                if current_holder in hometeam:  
-                    ball.speed = int(setting['redpasspower'])*0.6
+                ball.speed = 4
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False
@@ -495,11 +474,7 @@ class Person(): #선수
             if angle_difference < 0.2:  # 0.1 라디안 이내의 차이를 허용
                 self.ball_following = False
                 ball_moving = True
-                if current_holder in awayteam:
-                    ball.speed = int(setting['blueshootpower'])
-                if current_holder in hometeam:  
-                    ball.speed = int(setting['redshootpower'])
-
+                ball.speed = 7
             #self.power.firstpower = 0
             #self.power.power = 0
             #self.power.power_growing = False

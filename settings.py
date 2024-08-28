@@ -24,13 +24,13 @@ button_hover_color = (0,20,0)
 button_width, button_height = 150, 50
 pygame.init()
 width, height = 1800, 1000
-button_x, button_y = 600,100
+button_x, button_y = 80,500
 button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-button2_x, button2_y = 1000,100
+button2_x, button2_y = 480,500
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
 screen = pygame.display.set_mode((width, height))
 # 폰트 설정
-font = pygame.font.Font(None, 32)
+font = pygame.font.Font('HANGILE-TYPECONDENSED.TTF', 32)
 clock = pygame.time.Clock()
 bluepass = font.render('passpower  1~10',0,(255,255,255))
 blueshoot = font.render('shootpower  1~10',0,(255,255,255))
@@ -40,7 +40,7 @@ bluerunspeed = font.render('speed  1~10',0,(255,255,255))
 redrunspeed = font.render('speed  1~10',0,(255,255,255))
 save = font.render('save settings',0,(255,255,255))
 reset = font.render('reset',0,(255,255,255))
-
+title = font.render('Settings',0,(255,255,255))
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
@@ -110,9 +110,9 @@ def main(width,height):
     running = True
     input_box1 = InputBox(300, 100, 50, 32, setting['bluepasspower']) 
     input_box2 = InputBox(300,200,50,32, setting['blueshootpower'])
-    input_box3 = InputBox(1150, 100, 50, 32, setting['redshootpower'])
-    input_box4 = InputBox(1150,200,50,32, setting['redpasspower'])
-    input_box5 = InputBox(1150, 300, 50, 32, setting['redrunspeed'])
+    input_box3 = InputBox(600, 100, 50, 32, setting['redshootpower'])
+    input_box4 = InputBox(600,200,50,32, setting['redpasspower'])
+    input_box5 = InputBox(600, 300, 50, 32, setting['redrunspeed'])
     input_box6 = InputBox(300,300,50,32, setting['bluerunspeed'])
     input_boxes = [input_box1,input_box2,input_box3,input_box4,input_box5,input_box6]
 
@@ -170,12 +170,13 @@ def main(width,height):
         draw_button()
         screen.blit(bluepass,[100,100])
         screen.blit(blueshoot,[100,200])
-        screen.blit(redshoot,[1400,200])
-        screen.blit(redpass,[1400,100])
+        screen.blit(redshoot,[830,200])
+        screen.blit(redpass,[830,100])
         screen.blit(bluerunspeed,[100,300])
-        screen.blit(redrunspeed,[1400,300])
-        screen.blit(reset,[630,120])
-        screen.blit(save,[1030,120])
+        screen.blit(redrunspeed,[830,300])
+        screen.blit(reset,[130,500])
+        screen.blit(save,[500,500])
+        screen.blit(title,[500,50])
         pygame.display.flip()
         clock.tick(30)
 #한개만 더만들어서 red, blue 수치 기록 하는걸로.      

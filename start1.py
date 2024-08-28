@@ -72,7 +72,7 @@ def main():
                     pygame.quit()
                     sys.exit()
                 if button3_rect.collidepoint(event.pos):
-                    settings.main(1800,1000)
+                    settings.main(1000,800)
         screen.fill((57,129,69))
         draw_button()
         text = font.render('Play',0,(255,255,255))

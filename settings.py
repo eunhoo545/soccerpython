@@ -23,10 +23,12 @@ button_color = (0,0,0)
 button_hover_color = (0,20,0)
 button_width, button_height = 150, 50
 pygame.init()
+rect1 = pygame.Rect(0,0,500,1000)
+rect2 = pygame.Rect(500,0,500,1000)
 width, height = 1800, 1000
 button_x, button_y = 80,500
 button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-button2_x, button2_y = 480,500
+button2_x, button2_y = 760,500
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
 screen = pygame.display.set_mode((width, height))
 # 폰트 설정
@@ -87,6 +89,8 @@ class InputBox:
 
 
 def draw_button():
+    pygame.draw.rect(screen, (66,70,182), rect1)
+    pygame.draw.rect(screen, (195,40,40), rect2)
     mouse_x, mouse_y = pygame.mouse.get_pos()
     if button_rect.collidepoint((mouse_x, mouse_y)):
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -108,12 +112,12 @@ def main(width,height):
     setting = load_setting()
     screen = pygame.display.set_mode((width, height))
     running = True
-    input_box1 = InputBox(300, 100, 50, 32, setting['bluepasspower']) 
-    input_box2 = InputBox(300,200,50,32, setting['blueshootpower'])
+    input_box1 = InputBox(200, 100, 50, 32, setting['bluepasspower']) 
+    input_box2 = InputBox(200,200,50,32, setting['blueshootpower'])
     input_box3 = InputBox(600, 100, 50, 32, setting['redshootpower'])
     input_box4 = InputBox(600,200,50,32, setting['redpasspower'])
     input_box5 = InputBox(600, 300, 50, 32, setting['redrunspeed'])
-    input_box6 = InputBox(300,300,50,32, setting['bluerunspeed'])
+    input_box6 = InputBox(200,300,50,32, setting['bluerunspeed'])
     input_boxes = [input_box1,input_box2,input_box3,input_box4,input_box5,input_box6]
 
     while running:
@@ -159,24 +163,25 @@ def main(width,height):
                         json.dump(setting, file, ensure_ascii=False, indent=4)
                 if button_rect.collidepoint(event.pos):
                     start1.main()
-                
+              
         for box in input_boxes:
             box.update()
-
+        
         screen.fill((57,129,69))
+        draw_button()  
         for box in input_boxes:
             box.draw(screen)
         
-        draw_button()
-        screen.blit(bluepass,[100,100])
-        screen.blit(blueshoot,[100,200])
+        
+        screen.blit(bluepass,[30,100])
+        screen.blit(blueshoot,[30,200])
         screen.blit(redshoot,[830,200])
         screen.blit(redpass,[830,100])
-        screen.blit(bluerunspeed,[100,300])
+        screen.blit(bluerunspeed,[30,300])
         screen.blit(redrunspeed,[830,300])
         screen.blit(reset,[130,500])
-        screen.blit(save,[500,500])
-        screen.blit(title,[500,50])
+        screen.blit(save,[780,500])
+        screen.blit(title,[465,50])
         pygame.display.flip()
         clock.tick(30)
 #한개만 더만들어서 red, blue 수치 기록 하는걸로.      

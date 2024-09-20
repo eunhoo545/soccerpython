@@ -120,11 +120,6 @@ def pass_completed(hometeam, awayteam):
 	return False
 
 
-class Map():    
-	throwin = False     
-	game = True
-	goalkick = False
-	cornerkick = False
 
 def throwin(person,ball,y,map):
 	time.sleep(1)
@@ -271,7 +266,6 @@ def goal_scored(ball):
 			return 'home'
 	return None
 
-
 def moveplayer(person,keys,setting,ball):
 	
 	if keys[pygame.K_a]:
@@ -289,26 +283,40 @@ def moveplayer(person,keys,setting,ball):
 def move_towards_ball(player, ball, speed):
 	angle = calculate_angle(player.x, player.y, ball.x, ball.y)
 	player.x += math.cos(angle) * speed
-	player.y += math.sin(angle) * speed     
+	player.y += math.sin(angle) * speed 
+
+def game_start(start_time):
+	if time.time() - start_time > 0:
+		return True
+	return False
+
+def check_wall(ball):
+	if ball.x < 50:         
+		ball.x = 50
+	if ball.x > 1750:
+		ball.x = 1750
+	if ball.y < 20:
+		ball.y = 20
+	if ball.y > 980:
+		ball.y = 980 
+
 def main():
 
 	global ball_moving
 	global ball_angle
-	
-	person = Person(15, 930, 502, 'home', )
-	agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search', 'intercept', 'shoot'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
-	agent.load_q_table('q_table.pkl')
 	homescore = 0
 	awayscore = 0
 	hometeam = []
 	awayteam = []
+
+	person = Person(15, 930, 502, 'home', )
+	agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search', 'intercept', 'shoot'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
+	agent.load_q_table('q_table.pkl')
 	hometeam, awayteam, ball = setup_teams_and_ball()
 	environment = Environment(hometeam, awayteam, ball)
-
 	scoretext = myFont.render((str(homescore) + str(' - ') + str(awayscore)), True, (0, 0, 0))
-	startt = startf.render('test',True,(255,255,255))
+	stop = startf.render('stop',True,(255,255,255))
 	ball = Ball(12)
-	map = Map()
 	start_time = time.time()
 	
 	while True:
@@ -316,26 +324,22 @@ def main():
 		setting = settings.load_setting()
 		keys = pygame.key.get_pressed()
 		moveplayer(person,keys,setting,ball)
+		clock.tick(FPS)
 		if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
 			agent.save_q_table('q_table.pkl')
 			main()
 			return
-		def game_start():
-			if time.time() - start_time > 0:
-				return True
-			return False
 		
-		if game_start():
+		if game_start(start_time):
 			global current_holder 
-			if ball.x < 50:         
-				ball.x = 50
-			if ball.x > 1750:
-				ball.x = 1750
-			if ball.y < 20:
-				ball.y = 20
-			if ball.y > 980:
-				ball.y = 980            #공이 화면밖으로 나가지 않게 한다
-			for person in hometeam + awayteam:      #모든플레이어 조회
+			check_wall(ball)
+			for event in pygame.event.get(): #게임 종료 및 q_table 저장
+				if event.type == pygame.QUIT:
+					agent.save_q_table('q_table.pkl')
+					pygame.quit()
+					sys.exit()
+
+			for person in hometeam + awayteam:      #모든플레이어 조회 해서 action 할당 및 state업데이트
 				state = agent.get_state(environment)        #위치를 불러온다 (state 획득)
 				action = agent.choose_action(state)         #할 행동을 고른다
 				if action == 'move_up':     
@@ -385,68 +389,50 @@ def main():
 				agent.learn(state, action, reward, next_state)      #학습
 
 
-			if not any(player.ball_following for player in hometeam + awayteam):        #공을 잡고있지 않은 아무 플레이어
+			if not any(player.ball_following for player in hometeam + awayteam): #가장 가까운 플레이어(양팀1명)를 공쪽으로 이동
 				closest_home_player = min(hometeam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
 				closest_away_player = min(awayteam, key=lambda p: distance(p.x, p.y, ball.x, ball.y))
-
 				move_towards_ball(closest_home_player, ball, closest_home_player.speed)
 				move_towards_ball(closest_away_player, ball, closest_away_player.speed)
 
-			for i in hometeam:        #home팀
-				d = distance(i.x, i.y, ball.x, ball.y)      #공과 플레이어들의 거리
+			for i in hometeam + awayteam: #ball_following 상태변화 검사
+				d = distance(i.x, i.y, ball.x, ball.y) 
 				if 0 <= d < ball.radius + i.radius and ball.speed < 3:
 					i.ball_following = True
 					current_holder = i
 				else:
 					i.ball_following = False
-			for i in awayteam:
-				if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
-					i.ball_following = True
-					current_holder = i
-				else:
-					i.ball_following = False
 
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					agent.save_q_table('q_table.pkl')
-					pygame.quit()
-					sys.exit()
-
-			if ball_moving:
+			if ball_moving: #패스나 슛을 해서 공이 움직일때의 공 위치변화
 				ball.x += math.cos(ball_angle) * ball.speed * -1
 				ball.y += math.sin(ball_angle) * ball.speed * -1
 				ball.speed *= 0.99
 				if ball.speed < 0.2:
 					ball_moving = False
-			for i in hometeam+[person]:
+			
+			for i in awayteam + hometeam+[person]: #각도를 기반으로 따라가기
 				if i.ball_following:
 					ball.x = i.x + math.cos(ball_angle) * 12
 					ball.y = i.y + math.sin(ball_angle) * 12
-			for i in awayteam:
-				if i.ball_following:
-					ball.x = i.x + math.cos(ball_angle) * 12
-					ball.y = i.y + math.sin(ball_angle) * 12
 
-			clock.tick(FPS)
-			if game_start():
-				screen.fill((48, 131, 43))
-				lines()
-				person.draw()
-				for i in range(len(hometeam)):
-					hometeam[i].draw()
-					awayteam[i].draw()
-				ball.draw(current_holder)
-				pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
-				screen.blit(scoretext, [173, 56])
+			screen.fill((48, 131, 43))
+			lines()
+			person.draw()
+			for i in range(len(hometeam)):
+				hometeam[i].draw()
+				awayteam[i].draw()
+			ball.draw(current_holder)
+			pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
+			screen.blit(scoretext, [173, 56])
 
-				pygame.transform.flip(goalpost2, True, False)
+			pygame.transform.flip(goalpost2, True, False)
 
-				screen.blit(goalpost1, [1300, 285])
-				screen.blit(goalpost2, [-373, 285])
+			screen.blit(goalpost1, [1300, 285])
+			screen.blit(goalpost2, [-373, 285])
 			pygame.display.update()
 		else:
 			screen.fill((255,255,255))
-			screen.blit(startt, [900,500])
+			screen.blit(stop, [900,500])
 
 class Ball(): #공
 	def __init__(self,radius):
@@ -508,7 +494,7 @@ class Person(): #선수
 			global ball_moving
 			self.ball_following = False
 			ball_moving = True
-			ball.speed = int(setting['bluepasspower']) * 0.7
+			ball.speed = int(setting['bluepasspower']) * 0.8
 
 	def pass1(self, ball, target_player):
 		if self.ball_following:

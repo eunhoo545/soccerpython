@@ -1,86 +1,63 @@
 import pygame
-import sys
-import settings
+import math
 
+# Pygame 초기화
+pygame.init()
 
+# 화면 크기 설정
+screen = pygame.display.set_mode((500, 500))
 
-button = pygame.Rect(100,100,200,100)
+# 색상 설정
+white = (255, 255, 255)
 
+# FPS 설정
+clock = pygame.time.Clock()
 
-def playerset():
-    
-    global screen
-    # 초기화
-    pygame.init()
+# 원 클래스 정의
+class CircleWithImage:
+    def __init__(self, x, y, radius, image_path):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.image = pygame.image.load(image_path)  # 이미지 불러오기
+        self.image = pygame.transform.scale(self.image, (self.radius , self.radius ))  # 원 크기에 맞게 이미지 크기 조정
+        self.angle = 0  # 회전 각도 초기화
 
-    # 화면 설정
-    WIDTH, HEIGHT = 800, 600
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Pygame Dropdown Menu Example")
-
-    # 색상 정의
-    WHITE = (255, 255, 255)
-    BLACK = (0, 0, 0)
-    GRAY = (200, 200, 200)
-    BLUE = (0, 0, 255)
-
-    # 폰트 설정
-    font = pygame.font.Font(None, 32)
-
-    # 드롭다운 설정
-    options = ["High", "Midi", "Low"]
-    dropdown_rect = pygame.Rect(200, 100, 140, 32)
-    color_inactive = GRAY
-    color_active = BLACK
-    color = color_inactive
-    active = False
-    selected_option = options[0]
-
-    # 드롭다운 항목 설정
-    option_rects = []
-    for i, option in enumerate(options):
-        option_rects.append(pygame.Rect(200, 132 + i*32, 140, 32))
-
-    # 메인 루프
-    done = False
-    while not done:
+    def draw(self, surface):
+        # 이미지를 중심을 기준으로 회전
+        rotated_image = pygame.transform.rotate(self.image, self.angle)
+        rotated_rect = rotated_image.get_rect(center=(self.x, self.y))  # 중심을 유지하면서 회전
         
-        print(active)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if dropdown_rect.collidepoint(event.pos):
-                    active = not active
-                for i, option_rect in enumerate(option_rects):
-                    if option_rect.collidepoint(event.pos):
-                        if active:
-                            selected_option = options[i]
-                            print(selected_option)
-                            active = False
-                    color = color_active if active else color_inactive
+        # 회전된 이미지 그리기
+        surface.blit(rotated_image, rotated_rect.topleft)
 
-        screen.fill(WHITE)
+    def rotate(self, angle_speed):
+        # 각도 증가 (이미지 회전 속도)
+        self.angle += angle_speed
 
+# CircleWithImage 객체 생성 (이미지 경로는 적절히 설정)
+circle_image = CircleWithImage(250, 250, 50, "your_image.png")  # your_image.png는 이미지 파일 경로로 교체
 
-        draw(screen)
-        # 드롭다운 메뉴 렌더링
-        pygame.draw.rect(screen, color, dropdown_rect, 2)
-        txt_surface = font.render(selected_option, True, color)
-        text1 = font.render('Player1', True, (0,0,0))
-        screen.blit(txt_surface, (dropdown_rect.x + 5, dropdown_rect.y + 5))
-        screen.blit(text1, (100,100))
+# 프로그램 실행 중인지 확인하는 변수
+running = True
 
-        if active:
-            for i, option_rect in enumerate(option_rects):
-                pygame.draw.rect(screen, GRAY, option_rect)
-                txt_surface = font.render(options[i], True, BLACK)
-                screen.blit(txt_surface, (option_rect.x + 5, option_rect.y + 5))
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-        pygame.display.flip()
-        pygame.time.Clock().tick(30)
-    pygame.quit()
-    sys.exit()
-def draw(screen):
+    # 배경 색상
+    screen.fill(white)
 
-    pygame.draw.rect(screen, (0,0,0), button)
+    # 이미지 회전시키기
+    circle_image.rotate(1)  # 회전 속도 1도씩
+    circle_image.draw(screen)
+
+    # 화면 업데이트
+    pygame.display.flip()
+
+    # FPS 설정
+    clock.tick(60)
+
+# Pygame 종료
+pygame.quit()

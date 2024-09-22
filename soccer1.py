@@ -11,7 +11,7 @@ import random
 import pickle  # Q-테이블을 파일로 저장하고 불러오기 위한 모듈
 import settings
 
-FPS = 300
+FPS =1000
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
 
@@ -45,7 +45,7 @@ goalpost1 = pygame.image.load('goalpost1.png')
 goalpost2 = pygame.image.load('goalpost1.png')
 
 class Agent:
-	def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.9):
+	def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.3):
 		self.q_table = {}
 		self.actions = actions
 		self.lr = learning_rate
@@ -109,15 +109,20 @@ class Environment:      #환경
 
 
 def pass_completed(hometeam, awayteam):
-	global current_holder, pass_target_player, pass_in_progress
+	global current_holder, pass_target_player, pass_in_progress, pass_player
 	current_holder = next((player for player in hometeam + awayteam if player.ball_following), None)
+
 	if pass_in_progress and current_holder == pass_target_player:
 		print("pass 성공")
 		pass_in_progress = False
-		if (current_holder.team == 'home' and current_holder.y < pass_target_player.y) or \
-		   (current_holder.team == 'away' and current_holder.y > pass_target_player.y):
-			return 'forward'
-		return 'normal'
+		if current_holder.team == 'home':
+			if pass_target_player.x > pass_player.x:  # 홈팀의 패스가 앞쪽(오른쪽)으로 이루어진 경우
+				return 'forward'
+			return 'normal'
+		elif current_holder.team == 'away':
+			if pass_target_player.x < pass_player.x:  # 어웨이팀의 패스가 앞쪽(왼쪽)으로 이루어진 경우
+				return 'forward'
+			return 'normal'
 	return False
 
 
@@ -173,17 +178,17 @@ def distance(x1, y1, x2, y2):#거리계산
 def calculate_angle(x1, y1, x2, y2):        #각도계산
 	return math.atan2(y2 - y1, x2 - x1)
 def calculate_reward(action, environment):
-	global current_holder, last_action, pass_in_progress, pass_target_player
+	global current_holder, last_action, pass_in_progress, pass_target_player, ball_angle, pass_player
 	current_holder = next((player for player in environment.hometeam + environment.awayteam if player.ball_following), None)
-	teammates = [player for player in environment.hometeam if current_holder in environment.hometeam] + \
-				[player for player in environment.awayteam if current_holder in environment.awayteam]
-	if action == 'pass' and pass_in_progress and current_holder:
-		if current_holder.team == 'home':
-			if pass_target_player.x > current_holder.x:  # 홈팀의 패스가 앞쪽(오른쪽)으로 이루어진 경우
-				return PASS_FORWARD_REWARD
-		elif current_holder.team == 'away':
-			if pass_target_player.x < current_holder.x:  # 어웨이팀의 패스가 앞쪽(왼쪽)으로 이루어진 경우
-				return PASS_FORWARD_REWARD
+	if action == 'pass' and pass_in_progress:
+		if ball_angle >= 1.6 and ball_angle<= 4.5 and pass_player.team == 'away':
+			print("앞쪽 패스 시도 away")
+			ball_angle = 0
+			return PASS_FORWARD_REWARD
+		elif  ((0 < ball_angle and  ball_angle <= 1.4)  or (6.2 >= ball_angle and ball_angle >= 4.1))and pass_player.team == 'home':
+ 
+			ball_angle = 0
+			return PASS_FORWARD_REWARD
 	# 공을 가진 선수가 상대방 진영으로 이동하는 보상
 	if action in ['move_left', 'move_right']:
 		if current_holder is not None:
@@ -198,14 +203,14 @@ def calculate_reward(action, environment):
 			if player.ball_following:
 				if player.team != current_holder.team and distance(player.x, player.y, environment.ball.x, environment.ball.y) < player.radius + environment.ball.radius:
 					return 150
-				
-	pass_result = pass_completed(environment.hometeam, environment.awayteam)
-	if pass_result == 'forward':
-		print("앞쪽 선수에게 패스")
-		return PASS_FORWARD_REWARD
-	elif pass_result == 'normal':
-		print("일반 패스")
-		return PASS_REWARD
+	if pass_in_progress:			
+		pass_result = pass_completed(environment.hometeam, environment.awayteam)
+		if pass_result == 'forward':
+			print("앞쪽 선수에게 패스")
+			return PASS_FORWARD_REWARD
+		elif pass_result == 'normal':
+			print("일반 패스")
+			return PASS_REWARD
 
 	if action == 'shoot':
 		if shoot_completed(ball):
@@ -286,10 +291,12 @@ def move_towards_ball(player, ball, speed):
 	player.x += math.cos(angle) * speed
 	player.y += math.sin(angle) * speed     
 
-def main():
+def main(width,height):
 	global ball_moving
 	global ball_angle
-
+	global pass_in_progress
+	global pass_target_player
+	screen = pygame.display.set_mode((width, height))
 	person = Person(11,15, 930, 502, 'home', )
 	agent = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search', 'intercept', 'shoot'], learning_rate=0.01, discount_factor=0.9, epsilon=0.9)
 	agent.load_q_table('q_table.pkl')
@@ -313,7 +320,7 @@ def main():
 		moveplayer(person,keys,setting,ball)
 		if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
 			agent.save_q_table('q_table.pkl')
-			main()
+			main(1800,1000)
 			return
 		def game_start():
 			if time.time() - start_time > 0:
@@ -347,7 +354,6 @@ def main():
 						if teammates:       
 							target_player = random.choice(teammates)        #랜덤으로 패스받을 선수 선택
 							person.pass1(ball, target_player)           #패스
-							pass_in_progress = True
 							pass_target_player = target_player
 					elif action == 'search':           #액션이 search 일때 처리
 						person.search()         #search 함수
@@ -377,7 +383,7 @@ def main():
 				
 				reward = calculate_reward(action, environment)      #어떤 액션에 대한 보상
 				next_state = agent.get_state(environment)           #액션 이후의 state 가져오기
-				agent.learn(state, action, reward, next_state)      #학습
+				agent.learn(state, action, reward, next_state)     	#학습
 
 
 
@@ -397,12 +403,14 @@ def main():
 				if 0 <= d < ball.radius + i.radius and ball.speed < 3:
 					i.ball_following = True
 					current_holder = i
+					pass_in_progress = False
 				else:
 					i.ball_following = False
 			for i in awayteam:
 				if distance(i.x, i.y, ball.x, ball.y) < ball.radius + i.radius and ball.speed < 3:
 					i.ball_following = True
 					current_holder = i
+					pass_in_progress = False
 				else:
 					i.ball_following = False
 
@@ -462,7 +470,7 @@ class Ball(): #공
 		else:
 			pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
 	
-class Person(): #선수
+class Person():
 	def __init__(self,number,radius,x,y,team):
 		self.number = number
 		self.x = x
@@ -503,6 +511,8 @@ class Person(): #선수
 		global ball_angle
 		if self.ball_following:
 			ball_angle += pi/1800
+			if ball_angle >= 6.28:
+				ball_angle = 0
 		
 	def pass2(self,ball):
 		if self.ball_following:
@@ -513,7 +523,7 @@ class Person(): #선수
 
 	def pass1(self, ball, target_player):
 		if self.ball_following:
-			global ball_moving, pass_player
+			global ball_moving, pass_player, pass_in_progress
 			self.search()
 			angle = calculate_angle(self.x, self.y, target_player.x, target_player.y)
 			angle_ball = calculate_angle(self.x, self.y, ball.x, ball.y)
@@ -523,16 +533,15 @@ class Person(): #선수
 				print(f"패스 시도: {self.team}팀 의 {self.number}선수가 {target_player.team}팀의 {target_player.number} 의 선수에게 패스")
 				self.ball_following = False
 				ball_moving = True
+				pass_in_progress = True
 				pass_player = self
 				print("패스 시도한 player: ",pass_player.number)
 				if current_holder in hometeam:
-					ball.speed = int(setting['redpasspower']) * 0.8 
+					ball.speed = int(setting['redpasspower']) * 0.8
 				elif current_holder in awayteam:
 					ball.speed = int(setting['bluepasspower']) * 0.8 
 
-			#self.power.firstpower = 0
-			#self.power.power = 0
-			#self.power.power_growing = False
+		
 	def shoot1(self, ball, x1, x2, y1, y2):
 		if self.ball_following:
 			global ball_moving
@@ -572,4 +581,4 @@ class Person(): #선수
 				move_towards_ball(self, ball, self.speed) 
 				
 if __name__ == '__main__':
-	main()
+	main(1800,1000)

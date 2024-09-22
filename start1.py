@@ -3,7 +3,7 @@ import sys
 import random
 # 초기화
 pygame.init()
-font = pygame.font.SysFont('.font/강원교육모두 Bold.ttf',20,False,False)
+font = pygame.font.Font('./font/강원교육모두 Bold.TTF',20)
 x = False
 # 화면 크기 및 색상 설정
 width, height = 1000, 800
@@ -65,7 +65,7 @@ def main():
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
                     pygame.display.set_mode((width, height))  # 화면 크기 리셋
                     button_rect.topleft = (button_x, button_y)
-                    soccer1.main()
+                    soccer1.main(1800,1000)
                 if button2_rect.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
@@ -74,15 +74,15 @@ def main():
                     settings.main(1000,800)
         screen.fill((57,129,69)) 
         draw_button()
-        text = font.render('Play',0,(255,255,255))
-        text2 = font.render('Quit',0,(255,255,255))
-        text3 = font.render('Settings',0,(255,255,255))
+        text = font.render('플레이',0,(255,255,255))
+        text2 = font.render('게임 종료',0,(255,255,255))
+        text3 = font.render('설정',0,(255,255,255))
         title = font.render('Soccer Game',0,(255,255,255))
         
-        screen.blit(text,[455,125])
-        screen.blit(text2,[455,225])
-        screen.blit(text3,[450,325])
-        screen.blit(title,[435,25])
+        screen.blit(text,[451,112])
+        screen.blit(text2,[440,212])
+        screen.blit(text3,[457,312])
+        screen.blit(title,[422,25])
         pygame.display.flip()
         clock.tick(30)
         

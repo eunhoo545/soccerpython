@@ -1,12 +1,14 @@
 import pygame
 import sys
 import random
+import soccer1
+import settings 
 # 초기화
 pygame.init()
-font = pygame.font.SysFont('.font/강원교육모두 Bold.ttf',20,False,False)
+font = pygame.font.SysFont('msgothic',20,False,False)
 x = False
 # 화면 크기 및 색상 설정
-width, height = 1000, 800
+width, height = 1800, 1000
 white = (255, 255, 255)
 black = (0, 0, 0)
 button_color = (0,0,0)
@@ -18,11 +20,11 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Move Window Example")
 
 # 버튼 설정
-button_x, button_y = 400,100
+button_x, button_y = 225,100
 button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-button2_x, button2_y = 400,200
+button2_x, button2_y = 225,200
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
-button3_x, button3_y = 400,300
+button3_x, button3_y = 225,300
 button3_rect = pygame.Rect(button3_x, button3_y, button_width, button_height)
 
 # 이동할 위치 (상대적)
@@ -61,7 +63,7 @@ def main():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_rect.collidepoint(event.pos):
-                    import soccer1
+                    # 버튼 클릭 시 창 이
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
                     pygame.display.set_mode((width, height))  # 화면 크기 리셋
                     button_rect.topleft = (button_x, button_y)
@@ -70,19 +72,18 @@ def main():
                     pygame.quit()
                     sys.exit()
                 if button3_rect.collidepoint(event.pos):
-                    import settings 
                     settings.main(1000,800)
-        screen.fill((57,129,69)) 
+        screen.fill((57,129,69))
         draw_button()
         text = font.render('Play',0,(255,255,255))
         text2 = font.render('Quit',0,(255,255,255))
         text3 = font.render('Settings',0,(255,255,255))
         title = font.render('Soccer Game',0,(255,255,255))
         
-        screen.blit(text,[455,125])
-        screen.blit(text2,[455,225])
-        screen.blit(text3,[450,325])
-        screen.blit(title,[435,25])
+        screen.blit(text,[275,125])
+        screen.blit(text2,[275,225])
+        screen.blit(text3,[275,325])
+        screen.blit(title,[275,25])
         pygame.display.flip()
         clock.tick(30)
         

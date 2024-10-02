@@ -2,7 +2,7 @@ import pygame
 import sys
 import random
 #import soccer1
-import start1
+import menu
 #import playerset
 import json
 
@@ -32,7 +32,7 @@ button2_x, button2_y = 760,500
 button2_rect = pygame.Rect(button2_x, button2_y, button_width, button_height)
 screen = pygame.display.set_mode((width, height))
 # 폰트 설정
-font = pygame.font.Font('./font/강원교육모두 Bold.TTF', 25)
+font = pygame.font.Font('./font/start_font.TTF', 25)
 clock = pygame.time.Clock()
 bluepass = font.render('패스 세기  1~10',0,(255,255,255))
 blueshoot = font.render('슛 세기  1~10',0,(255,255,255))
@@ -141,7 +141,7 @@ def main(width,height):
                     with open("settings.json", 'w') as file:
                         json.dump(setting, file, ensure_ascii=False, indent=4)
                 if button2_rect.collidepoint(event.pos):
-                    start1.main()
+                    menu.main()
                         
                     
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -162,7 +162,7 @@ def main(width,height):
                     with open("settings.json", 'w') as file:
                         json.dump(setting, file, ensure_ascii=False, indent=4)
                 if button_rect.collidepoint(event.pos):
-                    start1.main()
+                    menu.main()
               
         for box in input_boxes:
             box.update()

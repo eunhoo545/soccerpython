@@ -3,7 +3,7 @@ import sys
 import random
 # 초기화
 pygame.init()
-font = pygame.font.SysFont('./font/start_font.ttf',20,False,False)
+font = pygame.font.Font('./font/start_font.ttf',20)
 x = False
 # 화면 크기 및 색상 설정
 width, height = 1000, 800
@@ -66,7 +66,7 @@ def main():
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
                     pygame.display.set_mode((width, height))  # 화면 크기 리셋
                     button_rect.topleft = (button_x, button_y)
-                    soccer1.main()
+                    soccer1.main(1800,1000)
                 if button2_rect.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()

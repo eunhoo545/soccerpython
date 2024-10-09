@@ -3,7 +3,7 @@ import sys
 import random
 # 초기화
 pygame.init()
-font = pygame.font.SysFont('./font/start_font.ttf',20,False,False)
+font = pygame.font.Font('./font/start_font.ttf',20)
 x = False
 # 화면 크기 및 색상 설정
 width, height = 1000, 800
@@ -80,10 +80,10 @@ def main():
         text3 = font.render('게임 설정',0,(255,255,255))
         title = font.render('Soccer Game',0,(255,255,255))
         
-        screen.blit(text,[455,125])
-        screen.blit(text2,[455,225])
-        screen.blit(text3,[450,325])
-        screen.blit(title,[435,25])
+        screen.blit(text,[451,113])
+        screen.blit(text2,[443,213])
+        screen.blit(text3,[443,313])
+        screen.blit(title,[420,25])
         pygame.display.flip()
         clock.tick(30)
         

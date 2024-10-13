@@ -16,7 +16,7 @@ button_width, button_height = 150, 50
 
 # 화면 설정
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Move Window Example")
+pygame.display.set_caption("Ramyeon soccer")
 
 # 버튼 설정
 button_x, button_y = 400,100
@@ -66,7 +66,7 @@ def main():
                     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
                     pygame.display.set_mode((width, height))  # 화면 크기 리셋
                     button_rect.topleft = (button_x, button_y)
-                    soccer1.main(1800,1000)
+                    soccer1.main()
                 if button2_rect.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
@@ -80,10 +80,10 @@ def main():
         text3 = font.render('게임 설정',0,(255,255,255))
         title = font.render('Soccer Game',0,(255,255,255))
         
-        screen.blit(text,[455,125])
-        screen.blit(text2,[455,225])
-        screen.blit(text3,[450,325])
-        screen.blit(title,[435,25])
+        screen.blit(text,[451,113])
+        screen.blit(text2,[443,213])
+        screen.blit(text3,[443,313])
+        screen.blit(title,[420,25])
         pygame.display.flip()
         clock.tick(30)
         

@@ -47,7 +47,20 @@ myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
 startf = pygame.font.SysFont( "centurygothic", 50, True, False)
 goalpost1 = pygame.image.load('goalpost1.png')
 goalpost2 = pygame.image.load('goalpost1.png')
-
+class Setpiece:
+    def throwin(playingteam, givingplayer, startballx, startbally):
+        playingteam = playingteam
+        givingplayer = givingplayer
+        startballx = startballx
+        startbally = startbally
+    def goalkick(playingteam, givingplayer, startballx, startbally):
+        playingteam = playingteam
+        givingplayer = givingplayer
+        startballx = startballx
+        startbally = startbally
+    def kickoff(playingteam, givingplayer):
+        playingteam = playingteam
+        givingplayer = givingplayer
 class Agent:
     def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.3):
         self.q_table = {}
@@ -145,11 +158,11 @@ def shoot_completed(ball):
 
     if goal_y_min <= ball.y <= goal_y_max:
         if ball.x <= ball.radius + home_goal_x:
-            print("슛 성공: 홈팀 골!")
+            print("슛 성공: 어웨이팀 골!")
             homescore += 1
             return True
         elif ball.x >= away_goal_x - ball.radius:
-            print("슛 성공: 어웨이팀 골!")
+            print("슛 성공: 홈팀 골!")
             awayscore += 1
             return True
     return False
@@ -248,7 +261,7 @@ def main(width,height):
 
     screen = pygame.display.set_mode((width, height))
     me = Person(11,15, 930, 502, 'home', GREEN)
-
+    setpiece = Setpiece()
     screen.fill((48, 131, 43))
 
     hometeam = []
@@ -271,9 +284,23 @@ def main(width,height):
         global setting
         setting = settings.load_setting()
         keys = pygame.key.get_pressed()
-
         moveplayer(me,keys,setting,ball)
+        global homescore
+        global awayscore
+        goal_y_min = 355
+        goal_y_max = 655
+        home_goal_x = 111
+        away_goal_x = 1687
 
+        if goal_y_min <= ball.y <= goal_y_max:
+            if ball.x <= ball.radius + home_goal_x:
+                print("슛 성공: 어웨이팀 골!")
+                awayscore += 1
+            elif ball.x >= away_goal_x - ball.radius:
+                print("슛 성공: 홈팀 골!")
+                homescore += 1
+                
+        
         if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
             agent.save_q_table('q_table.pkl')
             main(1800,1000)
@@ -344,11 +371,11 @@ def main(width,height):
                 global pass_state
                 pass_result = pass_completed()
                 if pass_result == 'forward':
-                    next_state = agent.get_state(environment)
+                    next_state = agent.get_state(environment, person)
                     agent.learn(pass_state, action, PASS_FORWARD_REWARD, next_state)
-                    print("foward 보상 지급 완료")
+                    print("forward 보상 지급 완료")
                 elif pass_result == 'normal':
-                    next_state = agent.get_state(environment)
+                    next_state = agent.get_state(environment, person)
                     agent.learn(pass_state, action, PASS_REWARD, next_state)
                     print("일반 보상 지급 완료")
 
@@ -381,12 +408,15 @@ def main(width,height):
                     sys.exit()
 
             if ball_moving:
+                ball.rotate(3)
                 ball.x += math.cos(ball_angle) * ball.speed
                 ball.y += math.sin(ball_angle) * ball.speed
                 ball.speed *= 0.99
                 if ball.speed < 0.2:
                     ball_moving = False
 
+            
+                
             for i in hometeam + [me] + awayteam:
                 if i.ball_following:
                     ball.x = i.x + math.cos(ball_angle) * 12
@@ -399,7 +429,9 @@ def main(width,height):
                     current_holder = i
                 else:
                     i.ball_following = False
-
+                    
+            
+            
             if ball.x < 50:
                 ball.x = 50
             if ball.x > 1750:
@@ -418,8 +450,7 @@ def main(width,height):
                 hometeam[i].draw()
             for j in range(len(awayteam)):
                 awayteam[j].draw()
-            ball.draw(current_holder)
-
+            ball.draw(current_holder,screen)
             scoretext = myFont.render((str(homescore) + str(' - ') + str(awayscore)), True, (0, 0, 0))
             pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
             pygame.transform.flip(goalpost2, True, False)
@@ -437,13 +468,28 @@ class Ball(): #공
         self.y = 505
         self.radius = radius
         self.speed = 0
-    def draw(self,person):
+        self.angle = 0
+        self.image = pygame.image.load("ball.png")  # 이미지 불러오기
+        self.image = pygame.transform.scale(self.image, (self.radius * 2, self.radius * 2))  # 원 크기에 맞게 이미지 크기 조정
+
+    def draw(self,person, screen):
+        image_rect =self.image.get_rect()
+        rotated_image = pygame.transform.rotate(self.image, self.angle)
+        rotated_rect = rotated_image.get_rect(center=(self.x, self.y))  # 중심을 유지하면서 회전
         if person is not None and person.ball_following == True:
             dx = person.x - self.x
             dy = person.y - self.y
-            pygame.draw.circle(screen,(0,0,0),(self.x-(dx),self.y-(dy)),self.radius)
+            #pygame.draw.circle(screen,(0,0,0),(self.x-(dx),self.y-(dy)),self.radius)
+            rotated_rect.center = (self.x - dx, self.y - dy)
+            screen.blit(rotated_image, rotated_rect)
         else:
-            pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
+            #pygame.draw.circle(screen,(0,0,0),(self.x,self.y),self.radius)
+            screen.blit(rotated_image, rotated_rect) #이미지 그리기
+    def rotate(self, angle_speed):
+        self.angle += angle_speed
+
+
+
 
 class Person():
     def __init__(self,number,radius,x,y,team,color=GREEN):
@@ -455,6 +501,7 @@ class Person():
         self.team = team
         self.color = color
         self.ball_following = False
+        self.position = 'forward'
 
     def distance(x1, y1, x2, y2):
         return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
@@ -554,5 +601,6 @@ class Person():
             if (not self.ball_following) and (self.team != current_holder.team):
                 move_towards_ball(self, ball, self.speed)
 
+        
 if __name__ == '__main__':
     main(1800,1000)

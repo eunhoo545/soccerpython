@@ -11,7 +11,7 @@ import random
 import pickle  # Q-테이블을 파일로 저장하고 불러오기 위한 모듈
 import settings
 
-FPS = 1000
+FPS = 1200
 MAX_WIDTH = 1800
 MAX_HEIGHT = 1000
 
@@ -22,6 +22,29 @@ SHOOT_REWARD = 2000
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
+
+GOAL_Y_MIN = 355
+GOAL_Y_MAX = 655
+
+F_HOME_FW_START_X = 1000
+F_HOME_FW_END_X = 1700
+
+D_HOME_FW_START_X = 600
+D_HOME_FW_END_X = 900
+
+F_HOME_MF_START_X = 800
+F_HOME_MF_END_X = 1500
+
+D_HOME_MF_START_X = 300
+D_HOME_MF_END_X = 700
+
+F_HOME_DF_START_X = 300
+F_HOME_DF_END_X = 900
+
+D_HOME_DF_START_X = 50
+D_HOME_DF_END_X = 600
+
+
 pi = 180
 
 ball_moving = False
@@ -62,7 +85,7 @@ class Setpiece:
         playingteam = playingteam
         givingplayer = givingplayer
 class Agent:
-    def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.3):
+    def __init__(self, actions, learning_rate=0.01, discount_factor=0.9, epsilon=0.1):
         self.q_table = {}
         self.actions = actions
         self.lr = learning_rate
@@ -146,17 +169,24 @@ def pass_completed():
             return 'normal'
     return False
 
-
+def render_goal_message(team):
+    font = pygame.font.Font(None, 74)
+    text = font.render(team+"GOAL !!", True, (0,0,0))
+    text_rect = text.get_rect()
+    text_rect.center = (900,500)
+    screen.blit(text, text_rect)
+    pygame.display.update()
+    print("Rendered GOAL MESSAGE")
+    clock.tick(0.5)
 
 def shoot_completed(ball):
     global homescore
     global awayscore
-    goal_y_min = 355
-    goal_y_max = 655
+
     home_goal_x = 111
     away_goal_x = 1687
 
-    if goal_y_min <= ball.y <= goal_y_max:
+    if GOAL_Y_MIN <= ball.y <= GOAL_Y_MAX:
         if ball.x <= ball.radius + home_goal_x:
             print("슛 성공: 어웨이팀 골!")
             homescore += 1
@@ -178,19 +208,57 @@ def calculate_reward(action, environment, player):
     global current_holder, last_action, pass_in_progress, pass_target_player, ball_angle, pass_player
     reward = -1
 
-    if action in ['move_left', 'move_right']:
-        if current_holder == player:
-            if player.team == 'home' and action == 'move_right':
-                reward = 10
-            elif player.team == 'away' and action == 'move_left':
-                reward = 10
-            else:
-                reward = -10
-
     if action == 'intercept' and current_holder != player and current_holder is not None:
         if player.team != current_holder.team and distance(player.x, player.y, environment.ball.x, environment.ball.y) < player.radius + environment.ball.radius:
             reward = 50
+    
+    # if action in ['move_left', 'move_right']:
+    #     if current_holder == player:
+    #         if player.team == 'home' and action == 'move_right':
+    #             reward = 10
+    #         elif player.team == 'away' and action == 'move_left':
+    #             reward = 10
+    #         else:
+    #             reward = -10
 
+    if action in ['move_left', 'move_right']:
+        if current_holder is not None:
+            if current_holder.team == 'home' and player.team == 'home':
+                if player.role == 'FW':
+                    if F_HOME_FW_START_X < player.x and player.x < F_HOME_FW_END_X:
+                        print("FW REWARD")
+                        reward = 20
+                    else: 
+                        reward = -20
+                elif player.role == 'MF':
+                    if F_HOME_MF_START_X < player.x and player.x < F_HOME_MF_END_X:
+                        print("MF REWARD")
+                        reward = 20
+                    else: 
+                        reward = -20
+                elif player.role == 'DF':
+                    if F_HOME_DF_START_X < player.x and player.x < F_HOME_DF_END_X:
+                        print("DF REWARD")
+                        reward = 20
+                    else: 
+                        reward = -20
+            elif current_holder.team == 'away' and player.team == 'home':
+                if player.role == 'FW':
+                        if D_HOME_FW_START_X < player.x < D_HOME_FW_END_X:
+                            reward = 20
+                        else: 
+                            reward = -20
+                elif player.role == 'MF':
+                    if D_HOME_MF_START_X < player.x < D_HOME_MF_END_X:
+                        reward = 20
+                    else: 
+                        reward = -20
+                elif player.role == 'DF':
+                    if D_HOME_DF_START_X < player.x < D_HOME_DF_END_X:
+                        reward = 20
+                    else: 
+                        reward = -20
+    print(reward)
     return reward
 
 
@@ -200,29 +268,29 @@ def setup_teams_and_ball():
     global awayteam
     # 플레이어 생성
     hometeam = [
-        Person(1,15, 738, 502, 'home', RED),
-        Person(2,15, 690, 684, 'home', RED),
-        Person(3,15, 758, 808, 'home', RED),
-        Person(4,15, 724, 158, 'home', RED),
-        Person(5,15, 600, 310, 'home', RED),
-        Person(6,15, 402, 108, 'home', RED),
-        Person(7,15, 358, 632, 'home', RED),
-        Person(8,15, 318, 388, 'home', RED),
-        Person(9,15, 458, 860, 'home', RED),
-        Person(10,15, 166, 506, 'home', RED)
+        Person(1,15, 738, 502, 'home', RED, role='FW'),
+        Person(2,15, 690, 684, 'home', RED, role='MF'),
+        Person(3,15, 758, 808, 'home', RED, role='FW'),
+        Person(4,15, 724, 158, 'home', RED, role='FW'),
+        Person(5,15, 600, 310, 'home', RED, role='MF'),
+        Person(6,15, 402, 108, 'home', RED, role='DF'),
+        Person(7,15, 358, 632, 'home', RED, role='DF'),
+        Person(8,15, 318, 388, 'home', RED, role='DF'),
+        Person(9,15, 458, 860, 'home', RED, role='DF'),
+        Person(10,15, 166, 506, 'home', RED, role='GK')
     ]
     awayteam = [
-        Person(1,15, 1030, 396, 'away', BLUE),
-        Person(2,15, 1050, 612, 'away', BLUE),
-        Person(3,15, 1042, 828, 'away', BLUE),
-        Person(4,15, 1082, 204, 'away', BLUE),
-        Person(5,15, 1240, 458, 'away', BLUE),
-        Person(6,15, 1220, 650, 'away', BLUE),
-        Person(7,15, 1362, 864, 'away', BLUE),
-        Person(8,15, 1300, 134, 'away', BLUE),
-        Person(9,15, 1406, 368, 'away', BLUE),
-        Person(10,15, 1446, 670, 'away', BLUE),
-        Person(11,15, 1624, 498, 'away', BLUE)
+        # Person(1,15, 1030, 396, 'away', BLUE,role='FW'),
+        # Person(2,15, 1050, 612, 'away', BLUE,role='FW'),
+        # Person(3,15, 1042, 828, 'away', BLUE,role='FW'),
+        # Person(4,15, 1082, 204, 'away', BLUE, role='FW'),
+        # Person(5,15, 1240, 458, 'away', BLUE, role='MF'),
+        # Person(6,15, 1220, 650, 'away', BLUE, role='MF'),
+        # Person(7,15, 1362, 864, 'away', BLUE, role='DF'),
+        # Person(8,15, 1300, 134, 'away', BLUE, role='DF'),
+        # Person(9,15, 1406, 368, 'away', BLUE, role='DF'),
+        # Person(10,15, 1446, 670, 'away', BLUE, role='DF'),
+         Person(11,15, 162400000000, 498, 'away', BLUE, role='GK')
     ]
     # 공 생성
     global ball
@@ -246,7 +314,7 @@ def moveplayer(cplayer,keys,setting,ball):
         cplayer.search()
     if keys[pygame.K_r]:
         cplayer.intercept(ball)
-
+ 
 def move_towards_ball(player, ball, speed):
     angle = calculate_angle(player.x, player.y, ball.x, ball.y)
     player.x += math.cos(angle) * speed
@@ -260,7 +328,7 @@ def main(width,height):
     global pass_target_player
 
     screen = pygame.display.set_mode((width, height))
-    me = Person(11,15, 930, 502, 'home', GREEN)
+    me = Person(11,15, 930, 502, 'home', GREEN, role='FW')
     setpiece = Setpiece()
     screen.fill((48, 131, 43))
 
@@ -272,9 +340,8 @@ def main(width,height):
 
     agents = {}
     for player in hometeam + awayteam:
-        agents[player] = Agent(actions=['move_up', 'move_down', 'move_left', 'move_right', 'kick', 'pass', 'search', 'intercept', 'shoot'])
+        agents[player] = Agent(actions=['move_left', 'move_right']) #, move_up', 'move_down','kick', 'pass', 'search', 'intercept', 'shoot'
         agents[player].load_q_table(f'./qtable/q_table_{player.team}_{player.number}.pkl')
-
     
     startt = startf.render('test',True,(255,255,255))
     ball = Ball(12)
@@ -291,16 +358,7 @@ def main(width,height):
         goal_y_max = 655
         home_goal_x = 111
         away_goal_x = 1687
-
-        if goal_y_min <= ball.y <= goal_y_max:
-            if ball.x <= ball.radius + home_goal_x:
-                print("슛 성공: 어웨이팀 골!")
-                awayscore += 1
-            elif ball.x >= away_goal_x - ball.radius:
-                print("슛 성공: 홈팀 골!")
-                homescore += 1
                 
-        
         if time.time() - start_time > 120:  # 120초가 지나면 Q-테이블 저장 및 게임 재시작
             agent.save_q_table('q_table.pkl')
             main(1800,1000)
@@ -366,7 +424,7 @@ def main(width,height):
                 reward = calculate_reward(action, environment, person)  # 어떤 액션에 대한 보상
                 next_state = agent.get_state(environment, person)  # 액션 이후의 state 가져오기
                 agent.learn(state, action, reward, next_state)  # 학습
-
+            
             if pass_in_progress:
                 global pass_state
                 pass_result = pass_completed()
@@ -455,6 +513,17 @@ def main(width,height):
             pygame.draw.line(screen, (255, 255, 255), (0, 5), (30, 5), 10)
             pygame.transform.flip(goalpost2, True, False)
             screen.blit(scoretext, [173, 56])
+            if GOAL_Y_MIN <= ball.y <= GOAL_Y_MAX:
+                if ball.x <= ball.radius + home_goal_x:
+                    print("슛 성공: 어웨이팀 골!")
+                    awayscore += 1
+                    render_goal_message('away')
+                    main(1800,1000)
+                elif ball.x >= away_goal_x - ball.radius:
+                    print("슛 성공: 홈팀 골!")
+                    homescore += 1
+                    render_goal_message('home')
+                    main(1800,1000)
             screen.blit(goalpost1, [1300, 285])
             screen.blit(goalpost2, [-373, 285])
             pygame.display.update()
@@ -492,7 +561,7 @@ class Ball(): #공
 
 
 class Person():
-    def __init__(self,number,radius,x,y,team,color=GREEN):
+    def __init__(self,number,radius,x,y,team,color=GREEN,role='def'):
         self.number = number
         self.x = x
         self.y = y
@@ -501,7 +570,7 @@ class Person():
         self.team = team
         self.color = color
         self.ball_following = False
-        self.position = 'forward'
+        self.role = role
 
     def distance(x1, y1, x2, y2):
         return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5

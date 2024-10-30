@@ -84,8 +84,8 @@ awayscore = 0
 screen = pygame.display.set_mode((MAX_WIDTH, MAX_HEIGHT))
 pygame.init()
 clock = pygame.time.Clock()
-myFont = pygame.font.SysFont( "centurygothic", 15, False, False)
-startf = pygame.font.SysFont( "centurygothic", 50, True, False)
+myFont = pygame.font.Font( './font/Supernatural_Knight.ttf', 15)
+startf = pygame.font.Font( "./font/Supernatural_Knight.ttf", 50)
 goalpost1 = pygame.image.load('goalpost1.png')
 goalpost2 = pygame.image.load('goalpost1.png')
 class Setpiece:

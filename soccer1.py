@@ -44,6 +44,24 @@ F_HOME_DF_END_X = 900
 D_HOME_DF_START_X = 50
 D_HOME_DF_END_X = 600
 
+F_AWAY_FW_START_X = 100
+F_AWAY_FW_END_X = 800
+
+D_AWAY_FW_START_X = 900
+D_AWAY_FW_END_X = 1200
+
+F_AWAY_MF_START_X = 300
+F_AWAY_MF_END_X = 1000
+
+D_AWAY_MF_START_X = 300
+D_AWAY_MF_END_X = 700
+
+F_AWAY_DF_START_X = 900
+F_AWAY_DF_END_X = 1500
+
+D_AWAY_DF_START_X = 1200
+D_AWAY_DF_END_X = 1850
+
 
 pi = 180
 
@@ -229,35 +247,116 @@ def calculate_reward(action, environment, player):
                         print("FW REWARD")
                         reward = 20
                     else: 
-                        reward = -20
+                        if action == 'move_right':
+                            if player.x < F_HOME_FW_END_X:
+                                reward = player.x/100
+                        else:   
+                            reward = (player.x/100)*(-1)
                 elif player.role == 'MF':
                     if F_HOME_MF_START_X < player.x and player.x < F_HOME_MF_END_X:
                         print("MF REWARD")
                         reward = 20
                     else: 
-                        reward = -20
+                        if action == 'move_right':
+                            if player.x < F_HOME_MF_END_X:
+                                reward = player.x/100
+                        else:   
+                            reward = (player.x/100)*(-1)
                 elif player.role == 'DF':
                     if F_HOME_DF_START_X < player.x and player.x < F_HOME_DF_END_X:
                         print("DF REWARD")
                         reward = 20
                     else: 
-                        reward = -20
+                        if action == 'move_right':
+                            if player.x < F_HOME_DF_END_X:
+                                reward = player.x/100
+                        else:
+                            reward = (player.x/100)*(-1)
             elif current_holder.team == 'away' and player.team == 'home':
                 if player.role == 'FW':
-                        if D_HOME_FW_START_X < player.x < D_HOME_FW_END_X:
-                            reward = 20
-                        else: 
-                            reward = -20
+                    if D_HOME_FW_START_X < player.x and player.x < D_HOME_FW_END_X:
+                        reward = 20
+                    else: 
+                        if action == 'move_left':
+                            reward = 18 - (player.x/100)
+                        else:
+                            reward = (player.x/100)*(-1) - 18
                 elif player.role == 'MF':
-                    if D_HOME_MF_START_X < player.x < D_HOME_MF_END_X:
+                    if D_HOME_MF_START_X < player.x and player.x < D_HOME_MF_END_X:
                         reward = 20
-                    else: 
-                        reward = -20
+                    else:
+                        if action == 'move_left':
+                            reward = 18 - (player.x/100)
+                        else:
+                            reward = (player.x/100)*(-1) - 18
                 elif player.role == 'DF':
-                    if D_HOME_DF_START_X < player.x < D_HOME_DF_END_X:
+                    if D_HOME_DF_START_X < player.x and player.x < D_HOME_DF_END_X:
+                        reward = 20
+                    else:
+                        if action == 'move_left':
+                            reward = 18 - (player.x/100)
+                        else:
+                            reward = (player.x/100)*(-1) - 18
+
+
+                            
+            elif current_holder.team == 'away' and player.team == 'away': #away공격
+                if player.role == 'FW':
+                    if F_AWAY_FW_START_X < player.x and player.x < F_AWAY_FW_END_X:
+                        print("FW REWARD")
                         reward = 20
                     else: 
-                        reward = -20
+                        if action == 'move_left':
+                            if player.x > F_AWAY_FW_START_X:
+                                reward = (18 - player.x/100)
+                        else:   
+                            reward = (18 - player.x/100)*(-1)
+                elif player.role == 'MF':
+                    if F_AWAY_MF_START_X < player.x and player.x < F_AWAY_MF_END_X:
+                        print("MF REWARD")
+                        reward = 20
+                    else: 
+                        if action == 'move_left':
+                            if player.x > F_AWAY_MF_START_X:
+                                reward = (18 - player.x/100)
+                        else:   
+                            reward = (18 - player.x/100)*(-1)
+                elif player.role == 'DF':
+                    if F_AWAY_DF_START_X < player.x and player.x < F_AWAY_DF_END_X:
+                        print("DF REWARD")
+                        reward = 20
+                    else: 
+                        if action == 'move_left':
+                            if player.x > F_AWAY_DF_START_X:
+                                reward = (18 - player.x/100)
+                        else:   
+                            reward = (18 - player.x/100)*(-1)
+            elif current_holder.team == 'home' and player.team == 'away': #away수비
+                if player.role == 'FW':
+                    if D_AWAY_FW_START_X < player.x and player.x < D_AWAY_FW_END_X:
+                        reward = 20
+                    else: 
+                        if action == 'move_right':
+                            reward = player.x/100
+                        else:
+                            reward = (player.x/100)*-1
+                elif player.role == 'MF':
+                    if D_AWAY_MF_START_X < player.x and player.x < D_AWAY_MF_END_X:
+                        reward = 20
+                    else: 
+                        if action == 'move_right':
+                            reward = player.x/100
+                        else:
+                            reward = (player.x/100)*-1
+                elif player.role == 'DF':
+                    if D_AWAY_DF_START_X < player.x < D_AWAY_DF_END_X:
+                        reward = 20
+                    else:
+                        if action == 'move_left':
+                            reward = player.x/100
+                        else:
+                            reward = (player.x/100)*(-1)  
+                                         
     print(reward)
     return reward
 
@@ -280,17 +379,17 @@ def setup_teams_and_ball():
         Person(10,15, 166, 506, 'home', RED, role='GK')
     ]
     awayteam = [
-        # Person(1,15, 1030, 396, 'away', BLUE,role='FW'),
-        # Person(2,15, 1050, 612, 'away', BLUE,role='FW'),
-        # Person(3,15, 1042, 828, 'away', BLUE,role='FW'),
-        # Person(4,15, 1082, 204, 'away', BLUE, role='FW'),
-        # Person(5,15, 1240, 458, 'away', BLUE, role='MF'),
-        # Person(6,15, 1220, 650, 'away', BLUE, role='MF'),
-        # Person(7,15, 1362, 864, 'away', BLUE, role='DF'),
-        # Person(8,15, 1300, 134, 'away', BLUE, role='DF'),
-        # Person(9,15, 1406, 368, 'away', BLUE, role='DF'),
-        # Person(10,15, 1446, 670, 'away', BLUE, role='DF'),
-         Person(11,15, 162400000000, 498, 'away', BLUE, role='GK')
+        Person(1,15, 1030, 396, 'away', BLUE,role='FW'),
+        Person(2,15, 1050, 612, 'away', BLUE,role='FW'),
+        Person(3,15, 1042, 828, 'away', BLUE,role='FW'),
+        Person(4,15, 1082, 204, 'away', BLUE, role='FW'),
+        Person(5,15, 1240, 458, 'away', BLUE, role='MF'),
+        Person(6,15, 1220, 650, 'away', BLUE, role='MF'),
+        Person(7,15, 1362, 864, 'away', BLUE, role='DF'),
+        Person(8,15, 1300, 134, 'away', BLUE, role='DF'),
+        Person(9,15, 1406, 368, 'away', BLUE, role='DF'),
+        Person(10,15, 1446, 670, 'away', BLUE, role='DF'),
+        Person(11,15, 1624, 498, 'away', BLUE, role='GK')
     ]
     # 공 생성
     global ball
@@ -340,7 +439,7 @@ def main(width,height):
 
     agents = {}
     for player in hometeam + awayteam:
-        agents[player] = Agent(actions=['move_left', 'move_right']) #, move_up', 'move_down','kick', 'pass', 'search', 'intercept', 'shoot'
+        agents[player] = Agent(actions=['move_left', 'move_right', 'move_up', 'move_down', 'pass', 'search', 'intercept', 'shoot'])
         agents[player].load_q_table(f'./qtable/q_table_{player.team}_{player.number}.pkl')
     
     startt = startf.render('test',True,(255,255,255))
@@ -647,9 +746,9 @@ class Person():
                 print(f"슛 시도: {self.team}팀 의 {self.number}선수가 슛")
                 self.ball_following = False
                 if current_holder in hometeam:
-                    ball.speed = int(setting['redshootpower']) * 1.05
+                    ball.speed = int(setting['redshootpower']) * 2
                 elif current_holder in awayteam:
-                    ball.speed = int(setting['bluepasspower']) * 1.05
+                    ball.speed = int(setting['bluepasspower']) * 2
 
 
     def calculate_angle(x1, y1, x2, y2):
